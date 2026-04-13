@@ -14,7 +14,7 @@ node_modules
 extractors
 # eslint
 .eslintcache
-
+.env*
 # misc
 .DS_Store
 
