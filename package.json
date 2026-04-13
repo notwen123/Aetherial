@@ -1,0 +1,19 @@
+{
+  "name": "aetherial",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "agents",
+    "contracts",
+    "frontend"
+  ],
+  "scripts": {
+    "contracts:compile": "yarn workspace @aetherial/contracts compile",
+    "contracts:deploy": "yarn workspace @aetherial/contracts deploy",
+    "frontend:dev": "yarn workspace @aetherial/frontend dev",
+    "agents:dev": "yarn workspace @aetherial/agents dev"
+  }
+}

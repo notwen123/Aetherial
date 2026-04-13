@@ -98,9 +98,10 @@ flowchart TD
     Auction --> Trader
     Trader --> Vault
     Vault --> Yield[Yield → Back to Vault + Agent Fees]
+```
 
 
-    🔄 How It Works (End-to-End Workflow)
+🔄 How It Works (End-to-End Workflow)
 
 Human deposits USDC/ETH into a Strategy Vault.
 Proposer Agent scans Uniswap for opportunities using Onchain OS.
