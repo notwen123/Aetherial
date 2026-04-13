@@ -156,7 +156,7 @@ git clone https://github.com/yourusername/aetherial.git
 # 2. Deploy (Hardhat + X Layer RPC)
 cd aetherial
 npm install
-npm run contracts:deploy --network xlayer
+npm run contracts:deploy --network xlayer.
 
 # 3. Run Credit Evaluator Skill
 plugin-store install okx-buildx-hackathon-agent-track
