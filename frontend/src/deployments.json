@@ -1,0 +1,17 @@
+{
+  "network": "xlayer_testnet",
+  "chainId": 1952,
+  "deployedAt": "",
+  "deployer": "",
+  "eas": {
+    "address": "",
+    "schemaRegistry": "",
+    "schemaUID": ""
+  },
+  "aetherial": {
+    "reputationNFT": "",
+    "registry": "",
+    "vault": "",
+    "ausd": ""
+  }
+}
