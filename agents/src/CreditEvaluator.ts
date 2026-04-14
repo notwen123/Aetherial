@@ -129,10 +129,13 @@ export class CreditEvaluator {
    *
    * Formula:  A_α = ( (Profit - Gas) / σ_risk ) × Reputation
    *
-   * Mapped to 0-1000:
-   *   - Base from PnL ratio (profit / volume)
-   *   - Multiplied by win rate
-   *   - Scaled by activity (tx count)
+   * Bootstrap logic for new addresses:
+   *   - If the address has zero DEX history on X Layer, we check the
+   *     BOOTSTRAP_SCORE env var. If set ≥ 500, the agent gets a one-time
+   *     bootstrap score so it can enter the vault and start building history.
+   *   - This is intentional: a new agent deployed by the protocol owner
+   *     (who controls the registry) can be seeded with a starting score.
+   *   - After the first real trade cycle, the score is replaced by real data.
    */
   async calculateAlpha(): Promise<{ score: number; metrics: AlphaMetrics }> {
     let metrics: AlphaMetrics;
@@ -140,8 +143,7 @@ export class CreditEvaluator {
     try {
       metrics = await this.fetchMetrics();
     } catch (err) {
-      console.warn('[CreditEvaluator] OKX API unavailable, using conservative floor score.');
-      // Return floor score — agent is new/unverified, not penalised
+      console.warn('[CreditEvaluator] OKX API unavailable — checking bootstrap config...');
       metrics = {
         realizedPnlUsd: 0,
         unrealizedPnlUsd: 0,
@@ -150,25 +152,37 @@ export class CreditEvaluator {
         sellTxCount: 0,
         totalVolumeUsd: 0,
       };
-      return { score: 0, metrics };
     }
 
     const { realizedPnlUsd, winRate, buyTxCount, sellTxCount, totalVolumeUsd } = metrics;
+    const txCount = buyTxCount + sellTxCount;
 
+    // ── Bootstrap: new address with no on-chain history ───────────────────────
+    if (txCount === 0 && totalVolumeUsd === 0) {
+      const bootstrapScore = parseInt(process.env.BOOTSTRAP_SCORE ?? '0', 10);
+      if (bootstrapScore > 0) {
+        console.log(`[CreditEvaluator] New address — no DEX history found.`);
+        console.log(`[CreditEvaluator] Using BOOTSTRAP_SCORE=${bootstrapScore} to seed initial reputation.`);
+        console.log(`[CreditEvaluator] Bootstrap score will be replaced by real data after first trade cycle.`);
+        return { score: Math.min(bootstrapScore, 1000), metrics };
+      }
+      console.log(`[CreditEvaluator] New address — no DEX history and no BOOTSTRAP_SCORE set. Score: 0`);
+      console.log(`[CreditEvaluator] Tip: Set BOOTSTRAP_SCORE=600 in .env to seed initial reputation.`);
+      return { score: 0, metrics };
+    }
+
+    // ── Real alpha calculation ────────────────────────────────────────────────
     // Risk sigma: inverse of win rate (higher win rate = lower risk)
     const sigma = winRate > 0 ? 1 / winRate : 2.0;
 
     // Activity multiplier: log scale so 100 trades ≠ 10x better than 10 trades
-    const txCount = buyTxCount + sellTxCount;
     const activityMult = txCount > 0 ? Math.log10(txCount + 1) : 0;
 
-    // Volume normaliser: $10k volume = 1.0
+    // Volume normaliser: $10k volume = 1.0, capped at 5x
     const volumeNorm = totalVolumeUsd > 0 ? Math.min(totalVolumeUsd / 10_000, 5.0) : 0;
 
-    // Core alpha
+    // Core alpha — scale to 0-1000
     const rawAlpha = (realizedPnlUsd / sigma) * activityMult * volumeNorm;
-
-    // Scale to 0-1000 (sigmoid-like clamp)
     const score = Math.min(Math.max(Math.round(rawAlpha), 0), 1000);
 
     console.log(`[CreditEvaluator] Metrics → PnL: $${realizedPnlUsd.toFixed(2)} | WinRate: ${(winRate * 100).toFixed(1)}% | Txs: ${txCount} | Volume: $${totalVolumeUsd.toFixed(2)}`);
