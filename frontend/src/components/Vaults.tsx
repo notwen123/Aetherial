@@ -1,126 +1,220 @@
 "use client";
 
-import React from 'react';
-import { 
-  Vault, 
-  ArrowUpRight, 
-  Layers, 
-  Shield, 
-  Zap,
-  ChevronRight,
-  Info
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Vault, ArrowUpRight, Layers, Zap, Info, Loader2, AlertCircle, TrendingUp, Lock } from 'lucide-react';
+import { useAetherial, useVaultStats } from '@/hooks/useAetherial';
+import { useAccount } from 'wagmi';
+import deployments from '../deployments.json';
 
-const VAULT_DATA = [
-  {
-    id: "v-1",
-    name: "X-Layer Alpha Vault",
-    description: "Multi-strategy yield optimization using agentic routing across OKX DEX and Lending pools.",
-    tvl: "$12.4M",
-    apy: "18.4%",
-    risk: "Medium",
-    asset: "AUSD",
-    status: "Active"
-  },
-  {
-    id: "v-2",
-    name: "Delta Neutral Prime",
-    description: "Algorithmic basis trading strategy leveraging X Layer's low-latency execution.",
-    tvl: "$42.1M",
-    apy: "12.2%",
-    risk: "Low",
-    asset: "USDC",
-    status: "Active"
-  },
-  {
-    id: "v-3",
-    name: "EVM Liquidity Engine",
-    description: "Concentrated liquidity management for core pairs on OKX Swap.",
-    tvl: "$8.2M",
-    apy: "31.5%",
-    risk: "High",
-    asset: "ETH/WETH",
-    status: "Active"
-  }
-];
+const EXPLORER = 'https://www.okx.com/explorer/xlayer/testnet/address/';
+const isDeployed = deployments.aetherial.vault !== '';
 
 export function Vaults() {
+  const { address, isConnected } = useAccount();
+  const {
+    lpAssetValueFormatted,
+    pendingYieldFormatted,
+    ausdBalanceFormatted,
+    deposit, withdraw, claimYield,
+    isTxPending, refetchAll, isDeployed: hookDeployed,
+  } = useAetherial();
+
+  const { totalAssetsFormatted, availableFormatted, utilization } = useVaultStats();
+
+  const [depositAmt, setDepositAmt] = useState('');
+  const [withdrawAmt, setWithdrawAmt] = useState('');
+  const [status, setStatus] = useState<{ msg: string; type: 'info' | 'ok' | 'err' } | null>(null);
+
+  const setMsg = (msg: string, type: 'info' | 'ok' | 'err') => setStatus({ msg, type });
+
+  const handleDeposit = async () => {
+    if (!depositAmt || parseFloat(depositAmt) <= 0) return;
+    setMsg(`Approving & depositing ${depositAmt} AUSD...`, 'info');
+    try {
+      const tx = await deposit(depositAmt);
+      setMsg(`Deposit confirmed. Tx: ${tx.slice(0, 10)}...`, 'ok');
+      setDepositAmt('');
+      setTimeout(refetchAll, 3000);
+    } catch (e: any) {
+      setMsg(e.shortMessage ?? e.message ?? 'Transaction rejected', 'err');
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!withdrawAmt || parseFloat(withdrawAmt) <= 0) return;
+    setMsg(`Withdrawing ${withdrawAmt} shares...`, 'info');
+    try {
+      const tx = await withdraw(withdrawAmt);
+      setMsg(`Withdrawal confirmed. Tx: ${tx.slice(0, 10)}...`, 'ok');
+      setWithdrawAmt('');
+      setTimeout(refetchAll, 3000);
+    } catch (e: any) {
+      setMsg(e.shortMessage ?? e.message ?? 'Transaction rejected', 'err');
+    }
+  };
+
+  const handleClaimYield = async () => {
+    setMsg('Claiming yield...', 'info');
+    try {
+      const tx = await claimYield();
+      setMsg(`Yield claimed. Tx: ${tx.slice(0, 10)}...`, 'ok');
+      setTimeout(refetchAll, 3000);
+    } catch (e: any) {
+      setMsg(e.shortMessage ?? e.message ?? 'Transaction rejected', 'err');
+    }
+  };
+
+  if (!isDeployed) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4 text-zinc-600">
+        <AlertCircle size={32} strokeWidth={1} />
+        <p className="text-sm font-bold uppercase tracking-widest">Contracts not deployed yet</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white tracking-tight">Strategy Vaults</h2>
-          <p className="text-sm text-zinc-400 mt-1">Institutional capital deployment via smart-orchestrated vaults.</p>
+          <h2 className="text-xl font-semibold text-white tracking-tight">Strategy Vault</h2>
+          <p className="text-sm text-zinc-400 mt-1">Live on-chain vault data from X Layer Testnet.</p>
         </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold transition-colors">
-            <Zap size={14} /> Auto-Optimize
-          </button>
-        </div>
+        <a
+          href={`${EXPLORER}${deployments.aetherial.vault}`}
+          target="_blank" rel="noreferrer"
+          className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 hover:text-indigo-400 transition-colors uppercase tracking-widest"
+        >
+          View Contract <ArrowUpRight size={12} />
+        </a>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {VAULT_DATA.map((vault) => (
-          <div 
-            key={vault.id}
-            className="group flex flex-col bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 rounded-xl overflow-hidden shadow-2xl transition-all duration-300"
-          >
-            <div className="p-6 space-y-4 flex-1">
-              <div className="flex items-start justify-between">
-                <div className="p-2.5 bg-zinc-950 border border-zinc-800 rounded-lg group-hover:border-indigo-500/50 transition-colors">
-                  <Vault size={24} className="text-zinc-400 group-hover:text-indigo-400" />
-                </div>
-                <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
-                  vault.risk === 'Low' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
-                  vault.risk === 'Medium' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
-                  'bg-rose-500/10 border-rose-500/20 text-rose-500'
-                }`}>
-                  {vault.risk} Risk
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">{vault.name}</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed font-medium">
-                  {vault.description}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="bg-zinc-950/50 border border-zinc-800/50 rounded-lg p-3">
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mb-1">APY</div>
-                  <div className="text-lg font-bold text-white font-mono">{vault.apy}</div>
-                </div>
-                <div className="bg-zinc-950/50 border border-zinc-800/50 rounded-lg p-3">
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mb-1">TVL</div>
-                  <div className="text-lg font-bold text-white font-mono">{vault.tvl}</div>
-                </div>
-              </div>
+      {/* Vault Global Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { label: 'Total Assets', value: `${totalAssetsFormatted} AUSD`, icon: Vault },
+          { label: 'Available Liquidity', value: `${availableFormatted} AUSD`, icon: Layers },
+          { label: 'Utilization', value: `${utilization}%`, icon: TrendingUp },
+        ].map(({ label, value, icon: Icon }) => (
+          <div key={label} className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5">
+            <div className="flex items-center gap-2 text-zinc-500 mb-2">
+              <Icon size={14} />
+              <span className="text-[10px] uppercase font-bold tracking-widest">{label}</span>
             </div>
-
-            <div className="px-6 py-4 bg-zinc-950/50 border-t border-zinc-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Layers size={14} className="text-zinc-500" />
-                <span className="text-xs text-zinc-300 font-bold">{vault.asset}</span>
-              </div>
-              <button className="flex items-center gap-1.5 text-xs text-indigo-400 font-bold hover:text-indigo-300 transition-colors">
-                Connect Wallet <ArrowUpRight size={14} />
-              </button>
-            </div>
+            <div className="text-2xl font-bold text-white font-mono">{value}</div>
           </div>
         ))}
       </div>
 
-      {/* Analytics Insight */}
-      <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-lg p-4 flex gap-4 items-start">
-        <div className="p-2 bg-indigo-500/10 rounded flex-shrink-0">
-          <Info size={18} className="text-indigo-400" />
+      {/* LP Position */}
+      {isConnected && (
+        <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 space-y-4">
+          <h3 className="text-sm font-bold text-white uppercase tracking-widest">Your Position</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">Deposited Value</div>
+              <div className="text-xl font-bold text-white font-mono">{lpAssetValueFormatted} AUSD</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">Pending Yield</div>
+              <div className="text-xl font-bold text-emerald-400 font-mono">{pendingYieldFormatted} AUSD</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">Wallet Balance</div>
+              <div className="text-xl font-bold text-zinc-300 font-mono">{ausdBalanceFormatted} AUSD</div>
+            </div>
+          </div>
+
+          {parseFloat(pendingYieldFormatted) > 0 && (
+            <button
+              onClick={handleClaimYield}
+              disabled={isTxPending}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-400 rounded-lg text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-50"
+            >
+              {isTxPending ? <Loader2 size={12} className="animate-spin" /> : <Zap size={12} />}
+              Claim {pendingYieldFormatted} AUSD Yield
+            </button>
+          )}
         </div>
+      )}
+
+      {/* Deposit / Withdraw */}
+      {isConnected ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Deposit */}
+          <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 space-y-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+              <ArrowUpRight size={14} className="text-indigo-400" /> Supply AUSD
+            </h3>
+            <div className="relative">
+              <input
+                type="number" value={depositAmt}
+                onChange={e => setDepositAmt(e.target.value)}
+                placeholder="0.00"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 px-5 text-xl font-mono text-white placeholder:text-zinc-700 focus:outline-none focus:border-indigo-500 transition-all"
+              />
+              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-500">AUSD</span>
+            </div>
+            <button
+              onClick={handleDeposit}
+              disabled={isTxPending || !depositAmt}
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isTxPending ? <Loader2 size={14} className="animate-spin" /> : null}
+              Deposit
+            </button>
+          </div>
+
+          {/* Withdraw */}
+          <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 space-y-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+              <Lock size={14} className="text-zinc-400" /> Withdraw Shares
+            </h3>
+            <div className="relative">
+              <input
+                type="number" value={withdrawAmt}
+                onChange={e => setWithdrawAmt(e.target.value)}
+                placeholder="0.00"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 px-5 text-xl font-mono text-white placeholder:text-zinc-700 focus:outline-none focus:border-indigo-500 transition-all"
+              />
+              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-500">SHARES</span>
+            </div>
+            <button
+              onClick={handleWithdraw}
+              disabled={isTxPending || !withdrawAmt}
+              className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 rounded-xl text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isTxPending ? <Loader2 size={14} className="animate-spin" /> : null}
+              Withdraw
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-zinc-900/20 border border-zinc-800/50 border-dashed rounded-xl p-8 text-center text-zinc-600">
+          <p className="text-sm font-bold uppercase tracking-widest">Connect wallet to deposit or withdraw</p>
+        </div>
+      )}
+
+      {/* Status message */}
+      {status && (
+        <div className={`rounded-lg px-4 py-3 text-xs font-bold border ${
+          status.type === 'ok' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+          status.type === 'err' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
+          'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
+        }`}>
+          {status.msg}
+        </div>
+      )}
+
+      {/* Info banner */}
+      <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-lg p-4 flex gap-4 items-start">
+        <Info size={18} className="text-indigo-400 flex-shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <h4 className="text-sm font-bold text-indigo-300">Agentic Insight</h4>
+          <h4 className="text-sm font-bold text-indigo-300">Yield Mechanics</h4>
           <p className="text-xs text-indigo-300/60 leading-relaxed">
-            Current performance indicates consistent alpha generated by Aether-Alpha in the X-Layer Alpha Vault. 
-            Automated rebalancing has preserved 12bps of capital during the latest volatility spike.
+            When agents settle profitable trades, 85% of profit flows to LPs pro-rata.
+            10% goes to the agent as performance fee. 5% to the protocol treasury.
+            Yield accrues continuously and is claimable at any time.
           </p>
         </div>
       </div>

@@ -49,7 +49,7 @@ const ERC20_ABI = [
   { name: 'allowance', type: 'function', stateMutability: 'view', inputs: [{ name: 'owner', type: 'address' }, { name: 'spender', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-const isDeployed = VAULT_ADDRESS !== '' && VAULT_ADDRESS !== undefined;
+const isDeployed = !!(VAULT_ADDRESS && VAULT_ADDRESS.length > 4);
 
 // ── Main LP hook ─────────────────────────────────────────────────────────────
 export function useAetherial() {
@@ -168,7 +168,7 @@ export function useVaultStats() {
   const ta = totalAssets as bigint | undefined;
   const tl = totalAllocated as bigint | undefined;
   const available = ta && tl ? ta - tl : undefined;
-  const utilization = ta && tl && ta > 0n
+  const utilization = ta && tl && ta > BigInt(0)
     ? ((Number(tl) / Number(ta)) * 100).toFixed(1)
     : '0.0';
 

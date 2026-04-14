@@ -2,6 +2,10 @@
   "name": "@aetherial/contracts",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.ts --network xlayer_testnet"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "hardhat": "^2.22.10"

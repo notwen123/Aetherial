@@ -1,17 +1,17 @@
 {
   "network": "xlayer_testnet",
   "chainId": 1952,
-  "deployedAt": "",
-  "deployer": "",
+  "deployedAt": "2026-04-14T01:57:50.139Z",
+  "deployer": "0x8743127A434f78F873CEA9c7669bC6a71741C8d7",
   "eas": {
-    "address": "",
-    "schemaRegistry": "",
-    "schemaUID": ""
+    "address": "0x1790289eC87dd307ad60DC2334267Aa364805F0D",
+    "schemaRegistry": "0x249003f93eF6AdA38286930D64b4e83b828BE0fD",
+    "schemaUID": "0x2b95cc9a77d48d173541e58c3d5d31af38edbe58eb70f1503a22458faea7ef63"
   },
   "aetherial": {
-    "reputationNFT": "",
-    "registry": "",
-    "vault": "",
-    "ausd": ""
+    "reputationNFT": "0x867A6EC2FD3EBd8613D5cAE366eDb6b5199a76b8",
+    "registry": "0x0764071210BfD3283D07d24C3bac6623F61eAC07",
+    "vault": "0x8A596D58Fe2FBAF7a8Fa7e34263512cBC5eBd3F1",
+    "ausd": "0xff7CceaEE80c63C11cd50Bf73260D3FA7B5Ab595"
   }
 }
