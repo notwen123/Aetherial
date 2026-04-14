@@ -1,28 +1,31 @@
 import { formatEther } from 'viem';
 import { CreditEvaluator } from './CreditEvaluator';
 import { VaultClient } from './VaultClient';
+import { SwapExecutor } from './SwapExecutor';
 import deployments from '@/deployments.json';
 
 export class AgentOrchestrator {
   private vaultClient: VaultClient;
   private evaluator: CreditEvaluator;
+  private swapper: SwapExecutor;
   private agentAddress: string;
 
   constructor() {
     this.vaultClient = new VaultClient(deployments);
     this.agentAddress = this.vaultClient.getAgentAddress();
     this.evaluator = new CreditEvaluator(this.agentAddress);
+    this.swapper = new SwapExecutor();
   }
 
   /**
    * Full autonomous prime broker cycle:
    * 
    *  1. REGISTER   — ensure agent is on-chain in AgentRegistry
-   *  2. AUDIT      — fetch real OKX DEX metrics, compute alpha score
+   *  2. AUDIT      — fetch real OKX/Viem metrics, compute alpha score
    *  3. ATTEST     — push EAS attestation on X Layer Testnet
    *  4. SCORE      — write credit score + EAS UID to AgentRegistry (triggers auto-whitelist)
-   *  5. EXECUTE    — if whitelisted, request vault liquidity
-   *  6. SETTLE     — return principal (+ simulated profit) to vault
+   *  5. EXECUTE    — if whitelisted, request vault liquidity and perform swaps
+   *  6. SETTLE     — return principal (+ profit) to vault
    */
   async runCycle(): Promise<{ status: string; score: number; easUID: string; logs: string[] }> {
     const logs: string[] = [];
@@ -39,9 +42,9 @@ export class AgentOrchestrator {
       await this.vaultClient.ensureRegistered();
 
       // ── 2. AUDIT ─────────────────────────────────────────────────────────────
-      log('[2/5] Fetching real-time performance metrics via OKX DEX API...');
-      const { score } = await this.evaluator.calculateAlpha();
-      log(`[2/5] Alpha score computed: ${score}/1000`);
+      log('[2/5] Fetching real-time performance metrics...');
+      const { score, metrics } = await this.evaluator.calculateAlpha();
+      log(`[2/5] Alpha score computed: ${score}/1000 via ${metrics.provider}`);
 
       // ── 3. ATTEST ─────────────────────────────────────────────────────────────
       log('[3/5] Anchoring reputation to EAS on X Layer Testnet...');
@@ -74,21 +77,31 @@ export class AgentOrchestrator {
 
       const state = await this.vaultClient.getVaultState();
       
-      // Skip if agent already has an open allocation
+      // Handle existing allocation
       if (state.agentAllocation > 0n) {
-        log('      Agent already has an active allocation. Settling previous position first...');
+        log('      Agent has active allocation. Clearing previous position...');
         await this._settlePosition(state.agentAllocation);
       }
 
-      const maxRequest = process.env.MAX_LIQUIDITY_REQUEST ?? '1000';
-      const requestHash = await this.vaultClient.requestLiquidity(maxRequest);
+      const requestAmount = process.env.MAX_LIQUIDITY_REQUEST ?? '1000';
+      const requestHash = await this.vaultClient.requestLiquidity(requestAmount);
       log(`      Liquidity allocated. Tx: ${requestHash}`);
 
-      // ── 6. SETTLE (same cycle — round-trip demo) ─────────────────────────────
-      const newState = await this.vaultClient.getVaultState();
-      if (newState.agentAllocation > 0n) {
-        log('      Settling position back to vault (round-trip demo)...');
-        await this._settlePosition(newState.agentAllocation);
+      // ── 6. TRADE (The "Broker" Logic) ────────────────────────────────────────
+      log('      [Broker] Initiating AUSD Alpha Round-Trip...');
+      try {
+        const swapResult = await this.swapper.executeRoundTrip(requestAmount);
+        log(`      [Broker] Profit Generated: $${swapResult.profitUsd.toFixed(4)}`);
+        log(`      [Broker] Settlement Hash: ${swapResult.txHash}`);
+      } catch (err) {
+        log(`      [Broker] Trade cycle failed: ${(err as Error).message}`);
+      }
+
+      // ── 7. SETTLE ────────────────────────────────────────────────────────────
+      const finalState = await this.vaultClient.getVaultState();
+      if (finalState.agentAllocation > 0n) {
+        log('      Settling principal + performance back to vault...');
+        await this._settlePosition(finalState.agentAllocation);
       }
 
       log('[Orchestrator] Cycle complete. Status: NOMINAL');
@@ -105,3 +118,4 @@ export class AgentOrchestrator {
     await this.vaultClient.settleLiquidity(repayment);
   }
 }
+

@@ -9,7 +9,7 @@ import deployments from '../deployments.json';
 
 const isDeployed = deployments.aetherial.vault !== '';
 
-const COLORS = ['#6366f1', '#818cf8', '#4f46e5', '#312e81'];
+const COLORS = ['#A3E635', '#BEF264', '#D9F99D', '#09090b'];
 
 export function PortfolioAnalytics() {
   const { address, isConnected } = useAccount();
@@ -30,7 +30,7 @@ export function PortfolioAnalytics() {
 
   if (!isDeployed) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4 text-zinc-600">
+      <div className="flex flex-col items-center justify-center py-24 gap-4 text-zinc-700">
         <AlertCircle size={32} strokeWidth={1} />
         <p className="text-sm font-bold uppercase tracking-widest">Contracts not deployed yet</p>
       </div>
@@ -49,10 +49,10 @@ export function PortfolioAnalytics() {
 
   const pieData = totalNum > 0
     ? [
-        { name: 'Allocated', value: allocatedNum, color: '#6366f1' },
-        { name: 'Available', value: availableNum, color: '#27272a' },
+        { name: 'Allocated', value: allocatedNum, color: '#A3E635' },
+        { name: 'Available', value: availableNum, color: '#18181b' },
       ]
-    : [{ name: 'Empty', value: 1, color: '#27272a' }];
+    : [{ name: 'Empty', value: 1, color: '#18181b' }];
 
   // Utilization trend (live single point — would be historical in prod)
   const utilizationNum = parseFloat(utilization);
@@ -76,39 +76,39 @@ export function PortfolioAnalytics() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Utilization Chart */}
-        <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 flex flex-col">
+        <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-6 flex flex-col shadow-2xl">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <TrendingUp size={18} className="text-indigo-400" />
+              <TrendingUp size={18} className="text-primary" />
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">Vault Utilization</h3>
             </div>
-            <div className="text-xs text-indigo-400 font-bold bg-indigo-400/10 px-2 py-0.5 rounded border border-indigo-400/20">
+            <div className="text-xs text-primary font-bold bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
               {utilization}% Active
             </div>
           </div>
           <div className="h-[220px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis dataKey="t" stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
-                <YAxis stroke="#52525b" fontSize={10} tickLine={false} axisLine={false}
+                <CartesianGrid strokeDasharray="3 3" stroke="#18181b" vertical={false} />
+                <XAxis dataKey="t" stroke="#3f3f46" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis stroke="#3f3f46" fontSize={10} tickLine={false} axisLine={false}
                   tickFormatter={v => `${v}%`} domain={[0, 100]} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: '#000', borderColor: '#18181b', borderRadius: '8px' }}
                   itemStyle={{ color: '#fff', fontSize: '12px' }}
                   formatter={(v: any) => [`${v}%`, 'Utilization']}
                 />
-                <Line type="monotone" dataKey="u" stroke="#6366f1" strokeWidth={3}
-                  dot={{ r: 4, fill: '#6366f1', strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="u" stroke="#A3E635" strokeWidth={3}
+                  dot={{ r: 4, fill: '#A3E635', strokeWidth: 2 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Allocation Donut */}
-        <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 flex flex-col">
+        <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-6 flex flex-col shadow-2xl">
           <div className="flex items-center gap-2 mb-6">
-            <PieIcon size={18} className="text-indigo-400" />
+            <PieIcon size={18} className="text-primary" />
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">Capital Distribution</h3>
           </div>
           <div className="flex items-center justify-between flex-1">
@@ -126,14 +126,14 @@ export function PortfolioAnalytics() {
             </div>
             <div className="flex flex-col gap-4 flex-1 ml-8">
               {[
-                { label: 'Total Assets', value: `${totalAssetsFormatted} AUSD`, color: '#6366f1' },
-                { label: 'Allocated', value: `${totalAllocatedFormatted} AUSD`, color: '#818cf8' },
-                { label: 'Available', value: `${availableFormatted} AUSD`, color: '#27272a' },
+                { label: 'Total Assets', value: `${totalAssetsFormatted} AUSD`, color: '#A3E635' },
+                { label: 'Allocated', value: `${totalAllocatedFormatted} AUSD`, color: '#BEF264' },
+                { label: 'Available', value: `${availableFormatted} AUSD`, color: '#18181b' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full border border-zinc-700" style={{ backgroundColor: color }} />
-                    <span className="text-xs text-zinc-400 font-medium">{label}</span>
+                    <div className="w-2.5 h-2.5 rounded-full border border-zinc-800" style={{ backgroundColor: color }} />
+                    <span className="text-xs text-zinc-500 font-medium">{label}</span>
                   </div>
                   <span className="text-xs text-white font-mono font-bold">{value}</span>
                 </div>
@@ -145,19 +145,19 @@ export function PortfolioAnalytics() {
 
       {/* LP Position card */}
       {isConnected && (
-        <div className="group relative bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 hover:border-indigo-500/30 transition-all">
+        <div className="group relative bg-zinc-950 border border-zinc-900 rounded-xl p-5 hover:border-primary/30 transition-all shadow-2xl">
           <div className="absolute top-0 right-0 p-4">
-            <BrainCircuit size={40} className="text-indigo-500/10 group-hover:text-indigo-500/20 transition-colors" />
+            <BrainCircuit size={40} className="text-primary/5 group-hover:text-primary/10 transition-colors" />
           </div>
           <div className="flex gap-4 items-start">
-            <div className="hidden sm:flex flex-col items-center gap-1.5 p-3 rounded-lg bg-zinc-950 border border-zinc-800">
-              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter">Share</span>
+            <div className="hidden sm:flex flex-col items-center gap-1.5 p-3 rounded-lg bg-black border border-zinc-900">
+              <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">Share</span>
               <span className="text-lg font-bold text-white font-mono">{lpSharePct}%</span>
             </div>
             <div className="space-y-2 flex-1">
               <div className="flex items-center gap-2">
-                <h4 className="text-sm font-bold text-white">Your LP Position</h4>
-                <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 text-[10px] rounded border border-indigo-500/20">Live</span>
+                <h4 className="text-sm font-bold text-white uppercase tracking-widest">Your LP Position</h4>
+                <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] rounded border border-primary/20 font-bold">LIVE</span>
               </div>
               <div className="grid grid-cols-3 gap-4 mt-3">
                 {[
@@ -166,7 +166,7 @@ export function PortfolioAnalytics() {
                   { label: 'Wallet Balance', value: `${ausdBalanceFormatted} AUSD` },
                 ].map(({ label, value }) => (
                   <div key={label}>
-                    <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{label}</div>
+                    <div className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">{label}</div>
                     <div className="text-sm font-bold text-white font-mono mt-0.5">{value}</div>
                   </div>
                 ))}

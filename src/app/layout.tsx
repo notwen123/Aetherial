@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: 'Industrial-grade liquidity protocol for the Agentic Economy.',
 };
 
+import { SmoothScroll } from '@/components/providers/SmoothScroll';
+
 export default function RootLayout({
   children,
 }: {
@@ -19,7 +21,9 @@ export default function RootLayout({
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${inter.className} bg-[#000000] text-white antialiased`}>
         <Providers>
-          {children}
+          <SmoothScroll>
+            {children}
+          </SmoothScroll>
         </Providers>
       </body>
     </html>

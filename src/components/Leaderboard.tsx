@@ -47,13 +47,13 @@ function AgentRow({ address, rank }: { address: `0x${string}`; rank: number }) {
   ];
 
   return (
-    <div className="group relative bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 rounded-lg p-5 transition-all duration-300 hover:bg-zinc-900 overflow-hidden">
+    <div className="group relative bg-zinc-950/50 border border-zinc-900 hover:border-primary/20 rounded-lg p-5 transition-all duration-300 hover:bg-zinc-950 overflow-hidden">
       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-        <Trophy size={80} strokeWidth={1} />
+        <Trophy size={80} strokeWidth={1} className="text-primary" />
       </div>
       <div className="flex items-center gap-6 relative z-10">
         {/* Rank */}
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-950 border border-zinc-800 text-sm font-bold text-white italic flex-shrink-0">
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-black border border-zinc-900 text-sm font-bold text-white italic flex-shrink-0">
           #{rank}
         </div>
 
@@ -61,29 +61,29 @@ function AgentRow({ address, rank }: { address: `0x${string}`; rank: number }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-base font-mono font-bold text-white truncate">{shortAddr}</span>
-            {isWhitelisted && <ShieldCheck size={14} className="text-emerald-500 flex-shrink-0" />}
+            {isWhitelisted && <ShieldCheck size={14} className="text-primary flex-shrink-0" />}
           </div>
           <div className="flex items-center gap-1.5 mt-1">
-            <span className="text-[10px] text-zinc-500 font-mono">EAS: {shortUID}</span>
+            <span className="text-[10px] text-zinc-600 font-mono">EAS: {shortUID}</span>
             {easUID && easUID.startsWith('0x') && (
               <a href={`${EXPLORER}${easUID}`} target="_blank" rel="noreferrer">
-                <ExternalLink size={10} className="text-zinc-600 hover:text-indigo-400 cursor-pointer" />
+                <ExternalLink size={10} className="text-zinc-600 hover:text-primary cursor-pointer" />
               </a>
             )}
           </div>
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-2 gap-8 px-8 border-x border-zinc-800/50 flex-shrink-0">
+        <div className="grid grid-cols-2 gap-8 px-8 border-x border-zinc-900/50 flex-shrink-0">
           <div>
             <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold flex items-center gap-1">
               <Target size={10} /> Credit Score
             </div>
-            <div className="text-xl font-bold text-white mt-0.5">{score}</div>
+            <div className="text-xl font-bold text-white mt-0.5 font-mono">{score}</div>
           </div>
           <div>
             <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Status</div>
-            <div className={`text-sm font-bold mt-0.5 ${isWhitelisted ? 'text-emerald-400' : 'text-zinc-500'}`}>
+            <div className={`text-sm font-bold mt-0.5 ${isWhitelisted ? 'text-primary' : 'text-zinc-600'}`}>
               {isWhitelisted ? 'Active' : 'Pending'}
             </div>
           </div>
@@ -94,13 +94,13 @@ function AgentRow({ address, rank }: { address: `0x${string}`; rank: number }) {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={trend}>
               <Line type="monotone" dataKey="v"
-                stroke={rank === 1 ? '#ec4899' : '#6366f1'}
+                stroke="#A3E635"
                 strokeWidth={2} dot={false} isAnimationActive />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        <ChevronRight className="text-zinc-700 group-hover:text-zinc-400 transition-colors ml-2 flex-shrink-0" size={16} />
+        <ChevronRight className="text-zinc-800 group-hover:text-primary transition-colors ml-2 flex-shrink-0" size={16} />
       </div>
     </div>
   );
