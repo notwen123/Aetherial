@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import {
   createWalletClient,
   http,
@@ -124,6 +123,9 @@ export class VaultClient {
   private ausdAddress: `0x${string}`;
 
   constructor(deployments: any) {
+    if (!process.env.PRIVATE_KEY) {
+       throw new Error('PRIVATE_KEY is missing');
+    }
     const account = privateKeyToAccount(
       process.env.PRIVATE_KEY as `0x${string}`
     );
@@ -136,7 +138,7 @@ export class VaultClient {
     this.client = createWalletClient({
       account,
       chain: xLayerTestnet,
-      transport: http(process.env.XLAYER_TESTNET_RPC ?? 'https://xlayertestrpc.okx.com'),
+      transport: http(process.env.XLAYER_TESTNET_RPC ?? 'https://testrpc.xlayer.tech/terigon'),
     }).extend(publicActions);
   }
 

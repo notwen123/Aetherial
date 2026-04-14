@@ -24,6 +24,7 @@ export default function AetherialTerminal() {
   const [depositAmt, setDepositAmt] = useState('');
   const [withdrawAmt, setWithdrawAmt] = useState('');
   const [logs, setLogs] = useState<{ msg: string; type: 'info' | 'success' | 'err' }[]>([]);
+  const [isAuditing, setIsAuditing] = useState(false);
 
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
@@ -84,6 +85,31 @@ export default function AetherialTerminal() {
       addLog(`Failed: ${e.shortMessage ?? e.message ?? 'Rejected'}`, 'err');
     }
   };
+
+  const handleTriggerAudit = async () => {
+    setIsAuditing(true);
+    addLog('Initiating Autonomous Audit Cycle...', 'info');
+    
+    try {
+      const res = await fetch('/api/agents/cycle', { method: 'POST' });
+      const data = await res.json();
+      
+      if (data.success) {
+        addLog(`Audit Complete. New Score: ${data.score}/1000`, 'success');
+        if (data.easUID) addLog(`EAS Anchored: ${data.easUID.slice(0, 18)}...`, 'success');
+        data.logs?.forEach((l: string) => addLog(l, 'info'));
+        refetchAll();
+      } else {
+        addLog(`Audit Failed: ${data.error}`, 'err');
+        data.logs?.forEach((l: string) => addLog(l, 'err'));
+      }
+    } catch (e: any) {
+      addLog(`Network Error: ${e.message}`, 'err');
+    } finally {
+      setIsAuditing(false);
+    }
+  };
+
 
   const navItems = [
     { id: 'DASHBOARD', icon: LayoutDashboard, label: 'Control' },
@@ -344,6 +370,26 @@ export default function AetherialTerminal() {
                     onClick={() => setActiveTab('LEADERBOARD')}
                     className="w-full py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-[10px] font-bold text-white uppercase tracking-[0.2em] hover:bg-zinc-900 hover:border-zinc-700 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
                     View Leaderboard <ChevronRight size={12} />
+                  </button>
+                </div>
+
+                <div className="bg-zinc-900/40 border border-zinc-800 p-6 rounded-2xl shadow-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.3em]">Autonomous Control</h4>
+                      <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5">Manual Rebalance</p>
+                    </div>
+                    <div className={`w-2 h-2 rounded-full ${isAuditing ? 'bg-amber-500 animate-ping' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
+                  </div>
+                  <p className="text-[10px] text-zinc-500 leading-relaxed font-medium pb-2">
+                    Force an immediate audit of performance metrics and re-anchoring of EAS reputation.
+                  </p>
+                  <button
+                    onClick={handleTriggerAudit}
+                    disabled={isAuditing}
+                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {isAuditing ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
+                    {isAuditing ? 'Auditing System...' : 'Trigger Audit Cycle'}
                   </button>
                 </div>
               </div>

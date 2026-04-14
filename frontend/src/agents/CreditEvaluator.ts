@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import axios from 'axios';
 import crypto from 'crypto';
 import {
@@ -78,13 +77,17 @@ export class CreditEvaluator {
   constructor(agentAddress: string) {
     this.agentAddress = agentAddress;
 
+    if (!process.env.PRIVATE_KEY) {
+      throw new Error('PRIVATE_KEY is missing');
+    }
+
     const account = privateKeyToAccount(
       process.env.PRIVATE_KEY as `0x${string}`
     );
     this.client = createWalletClient({
       account,
       chain: xLayerTestnet,
-      transport: http(process.env.XLAYER_TESTNET_RPC ?? 'https://xlayertestrpc.okx.com'),
+      transport: http(process.env.XLAYER_TESTNET_RPC ?? 'https://testrpc.xlayer.tech/terigon'),
     }).extend(publicActions) as any;
   }
 
@@ -128,14 +131,6 @@ export class CreditEvaluator {
    * Calculates the Agentic Alpha score (0-1000).
    *
    * Formula:  A_α = ( (Profit - Gas) / σ_risk ) × Reputation
-   *
-   * Bootstrap logic for new addresses:
-   *   - If the address has zero DEX history on X Layer, we check the
-   *     BOOTSTRAP_SCORE env var. If set ≥ 500, the agent gets a one-time
-   *     bootstrap score so it can enter the vault and start building history.
-   *   - This is intentional: a new agent deployed by the protocol owner
-   *     (who controls the registry) can be seeded with a starting score.
-   *   - After the first real trade cycle, the score is replaced by real data.
    */
   async calculateAlpha(): Promise<{ score: number; metrics: AlphaMetrics }> {
     let metrics: AlphaMetrics;
@@ -161,13 +156,8 @@ export class CreditEvaluator {
     if (txCount === 0 && totalVolumeUsd === 0) {
       const bootstrapScore = parseInt(process.env.BOOTSTRAP_SCORE ?? '0', 10);
       if (bootstrapScore > 0) {
-        console.log(`[CreditEvaluator] New address — no DEX history found.`);
-        console.log(`[CreditEvaluator] Using BOOTSTRAP_SCORE=${bootstrapScore} to seed initial reputation.`);
-        console.log(`[CreditEvaluator] Bootstrap score will be replaced by real data after first trade cycle.`);
         return { score: Math.min(bootstrapScore, 1000), metrics };
       }
-      console.log(`[CreditEvaluator] New address — no DEX history and no BOOTSTRAP_SCORE set. Score: 0`);
-      console.log(`[CreditEvaluator] Tip: Set BOOTSTRAP_SCORE=600 in .env to seed initial reputation.`);
       return { score: 0, metrics };
     }
 

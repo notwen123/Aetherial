@@ -6,14 +6,12 @@
     "node": ">=20.0.0"
   },
   "workspaces": [
-    "agents",
     "contracts",
     "frontend"
   ],
   "scripts": {
     "contracts:compile": "npm run compile -w @aetherial/contracts",
     "contracts:deploy": "npm run deploy -w @aetherial/contracts",
-    "frontend:dev": "npm run dev -w @aetherial/frontend",
-    "agents:dev": "npm run dev -w @aetherial/agents"
+    "frontend:dev": "npm run dev -w @aetherial/frontend"
   }
 }
