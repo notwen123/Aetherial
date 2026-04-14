@@ -8,20 +8,23 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "#0A0A0B",
+        background: "#000000",
         foreground: "#FFFFFF",
-        primary: "#00D4FF", // X Layer Cyan
-        secondary: "#FF00AA", // Industrial Pink
-        accent: "#1A1A1E", // Dark Gray accent
-        border: "#2A2A2E",
+        primary: "#A3E635", // Bright Green from image
+        secondary: "#1A1A1E", // Professional Deep Gray/Black
+        accent: "#FFFFFF",
+        border: "#1A1A1E",
+        zinc: {
+          950: "#050505",
+        }
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
         mono: ["Space Mono", "monospace"],
       },
       boxShadow: {
-        'cyan-glow': '0 0 15px rgba(0, 212, 255, 0.3)',
-        'industrial-glow': '0 0 20px rgba(0, 0, 0, 0.5)',
+        'neon-glow': '0 0 15px rgba(163, 230, 53, 0.2)',
+        'professional-glow': '0 0 30px rgba(0, 0, 0, 0.8)',
       }
     },
   },

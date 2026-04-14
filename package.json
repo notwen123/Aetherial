@@ -6,12 +6,36 @@
     "node": ">=20.0.0"
   },
   "workspaces": [
-    "contracts",
-    "frontend"
+    "contracts"
   ],
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "contracts:compile": "npm run compile -w @aetherial/contracts",
-    "contracts:deploy": "npm run deploy -w @aetherial/contracts",
-    "frontend:dev": "npm run dev -w @aetherial/frontend"
+    "contracts:deploy": "npm run deploy -w @aetherial/contracts"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.x",
+    "axios": "^1.13.6",
+    "clsx": "^2.x",
+    "lucide-react": "^0.x",
+    "next": "16.2.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^3.8.1",
+    "tailwind-merge": "^2.x",
+    "viem": "^2.x",
+    "wagmi": "^2.x"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }
