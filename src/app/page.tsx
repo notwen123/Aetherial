@@ -29,11 +29,60 @@ function ScrollSkew({ children }: { children: React.ReactNode }) {
   );
 }
 
+function Preloader({ onComplete }: { onComplete: () => void }) {
+  const [percent, setPercent] = React.useState(0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setPercent(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(onComplete, 500);
+          return 100;
+        }
+        return prev + Math.floor(Math.random() * 5) + 2;
+      });
+    }, 50);
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  return (
+    <motion.div 
+      exit={{ opacity: 0, scale: 1.1 }}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center p-6"
+    >
+      <div className="w-full max-w-sm space-y-8">
+        <div className="flex justify-between items-end">
+          <div className="space-y-1">
+            <div className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Aetherial Core</div>
+            <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest italic">Initializing Neural Cluster...</div>
+          </div>
+          <div className="text-2xl font-black text-white italic font-mono">{percent}%</div>
+        </div>
+        <div className="relative h-[2px] w-full bg-zinc-900 overflow-hidden">
+          <motion.div 
+            className="absolute top-0 left-0 h-full bg-primary shadow-[0_0_15px_rgba(163,230,53,0.5)]"
+            initial={{ width: 0 }}
+            animate={{ width: `${percent}%` }}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="text-[8px] font-bold text-zinc-700 uppercase tracking-widest animate-pulse">Checking TEE Integrity</div>
+          <div className="text-[8px] font-bold text-zinc-700 uppercase tracking-widest animate-pulse delay-100 text-right">EAS Handshake: Active</div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function LandingPage() {
   const { isConnected } = useAccount();
   const { connect } = useConnect();
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoaded, setIsLoaded] = React.useState(false);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -58,7 +107,13 @@ export default function LandingPage() {
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   React.useEffect(() => {
-    const timer = setTimeout(() => setIsLoaded(true), 100);
+    if (!isLoading) {
+      const timer = setTimeout(() => setIsLoaded(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
+
+  React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX, clientY } = e;
       const x = (clientX / window.innerWidth - 0.5) * 40;
@@ -68,7 +123,6 @@ export default function LandingPage() {
     window.addEventListener('mousemove', handleMouseMove);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      clearTimeout(timer);
     };
   }, []);
 
@@ -79,6 +133,10 @@ export default function LandingPage() {
 
   return (
     <main ref={containerRef} className="bg-black text-white selection:bg-primary/30 font-sans overflow-x-hidden">
+      <AnimatePresence>
+        {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
+      </AnimatePresence>
+
       <ScrollSkew>
         {/* Floating Navigation */}
         <motion.nav 
@@ -276,8 +334,10 @@ export default function LandingPage() {
             </div>
 
             <div className="grid md:grid-cols-12 gap-6 h-[800px]">
+              {/* Main Feature */}
               <motion.div 
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -10, rotateX: 2, rotateY: -2 }}
+                style={{ transformStyle: 'preserve-3d' }}
                 className="md:col-span-8 bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 relative overflow-hidden flex flex-col justify-end group cursor-default"
               >
                 <div className="absolute top-0 right-0 p-12 opacity-20 pointer-events-none group-hover:scale-105 transition-transform duration-1000">
