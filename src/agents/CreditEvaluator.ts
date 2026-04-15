@@ -133,7 +133,7 @@ export class CreditEvaluator {
     // 2. DEX history — estimate total volume from last 20 trades
     const histPath = `${basePath}/portfolio-dex-history?address=${this.agentAddress}&chainIndex=196&limit=20`;
     const histRes = await axios.get(
-      `https://www.okx.com${histPath}`,
+      `${OKX_BASE}${histPath}`,
       { headers: buildOKXHeaders('GET', histPath) }
     );
 

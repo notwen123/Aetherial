@@ -10,6 +10,9 @@ import {
 import { privateKeyToAccount } from 'viem/accounts';
 import { xLayerTestnet } from './chain';
 
+// ── OKX base URL — use proxy if set (for geo-restricted servers) ─────────────
+const OKX_BASE = process.env.OKX_PROXY_URL ?? 'https://www.okx.com';
+
 export const OKB_ADDRESS  = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 export const AUSD_ADDRESS = process.env.AUSD_TOKEN ?? '0xff7CceaEE80c63C11cd50Bf73260D3FA7B5Ab595';
 
@@ -70,7 +73,7 @@ export class SwapExecutor {
     console.log(`[SwapExecutor] Scanning token security: ${tokenAddress}`);
     try {
       const path = `/api/v5/dex/market/token-scan?chainId=${chainId}&tokenAddress=${tokenAddress}`;
-      const res = await axios.get(`https://www.okx.com${path}`, {
+      const res = await axios.get(`${OKX_BASE}${path}`, {
         headers: buildOKXHeaders('GET', path),
       });
 
@@ -99,7 +102,7 @@ export class SwapExecutor {
     readableAmount: string
   ): Promise<{ toAmount: string; priceImpact: string; gasUsd: string }> {
     const path = `/api/v5/dex/aggregator/quote?chainId=196&fromTokenAddress=${fromToken}&toTokenAddress=${toToken}&amount=${readableAmount}&slippage=0.5`;
-    const res = await axios.get(`https://www.okx.com${path}`, {
+    const res = await axios.get(`${OKX_BASE}${path}`, {
       headers: buildOKXHeaders('GET', path),
     });
 
@@ -120,7 +123,7 @@ export class SwapExecutor {
     slippage = '0.5'
   ): Promise<string> {
     const swapPath = `/api/v5/dex/aggregator/swap?chainId=196&fromTokenAddress=${fromToken}&toTokenAddress=${toToken}&amount=${readableAmount}&slippage=${slippage}&userWalletAddress=${this.walletAddress}`;
-    const swapRes = await axios.get(`https://www.okx.com${swapPath}`, {
+    const swapRes = await axios.get(`${OKX_BASE}${swapPath}`, {
       headers: buildOKXHeaders('GET', swapPath),
     });
 
