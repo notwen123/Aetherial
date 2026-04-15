@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Aetherial | Agentic Prime Broker',
   description: 'Industrial-grade liquidity protocol for the Agentic Economy.',
+  icons: {
+    icon: '/logo.png',
+  },
 };
 
 import { SmoothScroll } from '@/components/providers/SmoothScroll';
@@ -29,4 +32,3 @@ export default function RootLayout({
     </html>
   );
 }
-

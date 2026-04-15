@@ -56,9 +56,9 @@ function Preloader({ onComplete }: { onComplete: () => void }) {
         <div className="flex justify-between items-end">
           <div className="space-y-1">
             <div className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Aetherial Core</div>
-            <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest italic">Initializing Neural Cluster...</div>
+            <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Initializing Neural Cluster...</div>
           </div>
-          <div className="text-2xl font-black text-white italic font-mono">{percent}%</div>
+          <div className="text-2xl font-black text-white font-mono">{percent}%</div>
         </div>
         <div className="relative h-[2px] w-full bg-zinc-900 overflow-hidden">
           <motion.div 
@@ -146,22 +146,22 @@ export default function LandingPage() {
         >
           <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full px-8 h-16 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <div className="flex items-center gap-3 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <div className="w-8 h-8 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-all duration-500">
-                <Cpu size={18} className="text-primary" />
+              <div className="w-8 h-8 flex items-center justify-center group-hover:bg-primary/5 transition-all duration-500 overflow-hidden rounded-lg">
+                <Image src="/logo.png" alt="Aetherial Logo" width={24} height={24} className="object-contain" />
               </div>
-              <span className="text-sm font-black tracking-tighter uppercase italic">Aetherial</span>
+              <span className="text-sm font-black tracking-tighter uppercase py-1">Aetherial</span>
             </div>
 
             <div className="hidden lg:flex items-center gap-8">
               {['Protocol', 'Ecosystem', 'Governance', 'Docs'].map(item => (
-                <a key={item} href={`#${item.toLowerCase()}`} className="text-[9px] font-black text-zinc-500 hover:text-primary transition-colors uppercase tracking-[0.3em]">{item}</a>
+                <a key={item} href={`#${item.toLowerCase()}`} className="text-[10px] font-mono font-bold text-zinc-500 hover:text-primary transition-colors uppercase tracking-[0.4em]">{item}</a>
               ))}
             </div>
 
             <div className="flex items-center gap-4">
               <button
                 onClick={handleLaunch}
-                className="bg-primary text-black px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:brightness-110 hover:scale-105 transition-all flex items-center gap-2 active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.2)]"
+                className="bg-primary text-black px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-110 hover:scale-105 transition-all flex items-center gap-2 active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.2)]"
               >
                 {isConnected ? 'Terminal' : 'Initialize'} <TerminalIcon size={12} />
               </button>
@@ -222,7 +222,7 @@ export default function LandingPage() {
         </section>
 
         {/* Section 2: Industrial Stats */}
-        <section className="relative z-20 py-32 bg-black border-y border-zinc-900">
+        <section className="relative z-20 py-48 bg-black border-y border-zinc-900">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-16">
               {[
@@ -237,12 +237,12 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1, duration: 0.8 }}
-                  className="space-y-2 group"
+                  className="space-y-4 group"
                 >
-                  <div className="text-[10px] text-zinc-600 uppercase font-black tracking-[0.3em] group-hover:text-primary transition-colors">{stat.label}</div>
-                  <div className="text-5xl font-bold tracking-tighter text-white font-mono flex items-baseline gap-2">
+                  <div className="text-[10px] font-mono text-zinc-600 uppercase font-bold tracking-[0.4em] group-hover:text-primary transition-colors">{stat.label}</div>
+                  <div className="text-5xl font-black tracking-tighter text-white font-mono flex items-baseline gap-2">
                     {stat.val} 
-                    {stat.sub.includes('%') && <span className="text-primary text-xs tracking-normal align-top">{stat.sub}</span>}
+                    {stat.sub.includes('%') && <span className="text-primary text-xs tracking-normal align-top font-sans font-bold">{stat.sub}</span>}
                   </div>
                 </motion.div>
               ))}
@@ -300,11 +300,11 @@ export default function LandingPage() {
                   transition={{ duration: 1, ease: 'easeOut' }}
                   className="space-y-6 text-left"
                 >
-                  <div className="inline-block px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
+                  <div className="inline-block px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[10px] font-mono font-bold text-primary tracking-[0.4em] uppercase">
                     LIQUIDITY ARCHITECTURE
                   </div>
-                  <h3 className="text-4xl md:text-6xl font-black tracking-tighter italic leading-none uppercase">Autonomous Yield Allocation.</h3>
-                  <p className="text-lg text-zinc-500 leading-relaxed max-w-xl font-bold">Aetherial agents utilize TEE execution to manage liquidity across Uniswap V4 and Aave. Every rebalance is governed by strictly encoded profit-sharing mandates.</p>
+                  <h3 className="text-4xl md:text-6xl font-black tracking-tighter leading-none uppercase">Autonomous Yield Allocation.</h3>
+                  <p className="text-xl text-zinc-500 leading-[1.7] max-w-xl font-medium">Aetherial agents utilize TEE execution to manage liquidity across Uniswap V4 and Aave. Every rebalance is governed by strictly encoded profit-sharing mandates.</p>
                   <div className="relative h-[400px] w-full flex items-center justify-center group">
                     <Image 
                       src="/3.png" 
@@ -328,7 +328,7 @@ export default function LandingPage() {
                     <div className="inline-block self-start px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
                       TRUST PROTOCOL
                     </div>
-                    <h4 className="text-2xl font-black tracking-tighter italic leading-tight uppercase">Reputation-as-a-Service.</h4>
+                    <h4 className="text-2xl font-black tracking-tighter leading-tight uppercase">Reputation-as-a-Service.</h4>
                     <div className="relative h-[250px] w-full flex items-center justify-center group">
                       <Image 
                         src="/2.png" 
@@ -350,7 +350,7 @@ export default function LandingPage() {
                     <div className="inline-block self-start px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
                       NETWORK FINALITY
                     </div>
-                    <h4 className="text-2xl font-black tracking-tighter italic leading-tight uppercase">Engineered on X Layer.</h4>
+                    <h4 className="text-2xl font-black tracking-tighter leading-tight uppercase">Engineered on X Layer.</h4>
                     <div className="relative h-[250px] w-full flex items-center justify-center group">
                       <Image 
                         src="/7.png" 
@@ -368,28 +368,28 @@ export default function LandingPage() {
         </section>
 
         {/* Section 4: Intelligence Grid (Bento) */}
-        <section id="ecosystem" className="py-40 bg-zinc-950/20">
+        <section id="ecosystem" className="py-56 bg-zinc-950/20">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="flex flex-col md:flex-row justify-between items-end gap-10 mb-24">
-              <h2 className="text-6xl md:text-8xl font-bold tracking-tighter italic">Frontier Logic.</h2>
-              <Link href="/docs" className="group flex items-center gap-3 text-xs font-black text-primary uppercase tracking-widest bg-primary/10 px-6 py-3 rounded-full border border-primary/20 hover:bg-primary hover:text-black transition-all">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-10 mb-32">
+              <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none uppercase">Frontier Logic.</h2>
+              <Link href="/docs" className="group flex items-center gap-3 text-[10px] font-mono font-bold text-primary uppercase tracking-[0.4em] bg-primary/10 px-8 py-4 rounded-full border border-primary/20 hover:bg-primary hover:text-black transition-all">
                 Audit the Engine <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
-            <div className="grid md:grid-cols-12 gap-6 items-stretch">
+            <div className="grid md:grid-cols-12 gap-8 items-stretch">
               {/* Sidebar Feature */}
               <motion.div 
                 whileHover={{ y: -10, rotateX: 4, rotateY: 4 }}
                 style={{ transformStyle: 'preserve-3d' }}
-                className="md:col-span-4 bg-zinc-950 border border-zinc-900 rounded-[48px] p-8 relative overflow-hidden flex flex-col justify-center group cursor-default min-h-[350px]"
+                className="md:col-span-4 bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 relative overflow-hidden flex flex-col justify-center group cursor-default min-h-[350px]"
               >
                  <div className="absolute inset-0 opacity-10 group-hover:scale-110 transition-transform duration-1000">
                    <Image src="/5.png" alt="UI" fill className="object-cover" />
                  </div>
-                 <div className="relative z-10 space-y-2">
+                 <div className="relative z-10 space-y-4">
                     <Zap className="text-primary" size={24} />
-                    <h4 className="text-xl font-bold italic transition-colors group-hover:text-primary uppercase">Flash Rebalancers</h4>
+                    <h4 className="text-2xl font-black transition-colors group-hover:text-primary uppercase tracking-tight">Flash Rebalancers</h4>
                  </div>
               </motion.div>
 
@@ -397,15 +397,15 @@ export default function LandingPage() {
               <motion.div 
                 whileHover={{ y: -10, rotateX: 2, rotateY: -2 }}
                 style={{ transformStyle: 'preserve-3d' }}
-                className="md:col-span-8 bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 relative overflow-hidden flex flex-col justify-end group cursor-default min-h-[350px]"
+                className="md:col-span-8 bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 relative overflow-hidden flex flex-col justify-end group cursor-default min-h-[400px]"
               >
                 <div className="absolute top-0 right-0 p-12 opacity-20 pointer-events-none group-hover:scale-105 transition-transform duration-1000">
                   <Image src="/4.png" alt="UI" width={400} height={400} className="object-contain" />
                 </div>
-                <div className="relative z-10 space-y-4">
+                <div className="relative z-10 space-y-6">
                   <Shield className="text-primary mb-4" size={40} />
-                  <h3 className="text-4xl font-black tracking-tight uppercase italic underline decoration-primary/20 underline-offset-8">EAS Infrastructure.</h3>
-                  <p className="text-zinc-500 max-w-md font-bold text-sm tracking-wide">The most secure on-chain verification layer for autonomous entities, integrated natively into the Aetherial dashboard.</p>
+                  <h3 className="text-4xl md:text-5xl font-black tracking-tighter uppercase underline decoration-primary/20 underline-offset-8">EAS Infrastructure.</h3>
+                  <p className="text-zinc-500 max-w-md font-medium text-lg leading-[1.7]">The most secure on-chain verification layer for autonomous entities, integrated natively into the Aetherial dashboard.</p>
                 </div>
               </motion.div>
 
@@ -413,22 +413,22 @@ export default function LandingPage() {
               <motion.div 
                 whileHover={{ y: -10, rotateX: 4, rotateY: -4 }}
                 style={{ transformStyle: 'preserve-3d' }}
-                className="md:col-span-4 bg-primary/5 border border-primary/10 rounded-[48px] p-10 flex flex-col justify-center gap-4 group cursor-default min-h-[350px]"
+                className="md:col-span-4 bg-primary/5 border border-primary/10 rounded-[48px] p-12 flex flex-col justify-center gap-6 group cursor-default min-h-[350px]"
               >
-                 <div className="text-4xl font-bold text-primary italic font-mono tracking-tighter shadow-primary/20 drop-shadow-2xl">1.2ms</div>
-                 <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest leading-relaxed">Execution latency on high-frequency vault rebalancing.</p>
+                 <div className="text-5xl font-black text-primary font-mono tracking-tighter shadow-primary/20 drop-shadow-2xl">1.2ms</div>
+                 <p className="text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-[0.4em] leading-relaxed">Execution latency on high-frequency vault rebalancing.</p>
               </motion.div>
 
               <motion.div 
                 whileHover={{ y: -10, rotateX: -2, rotateY: 2 }}
                 style={{ transformStyle: 'preserve-3d' }}
-                className="md:col-span-4 bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 relative overflow-hidden group cursor-default min-h-[350px]"
+                className="md:col-span-4 bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 relative overflow-hidden group cursor-default min-h-[350px]"
               >
                  <div className="absolute bottom-[-10%] right-[-10%] w-1/2 opacity-20 group-hover:rotate-12 transition-transform duration-700">
                    <Image src="/6.png" alt="UI" width={300} height={300} />
                  </div>
-                 <h4 className="text-2xl font-bold italic mb-4">Recursive Vaults</h4>
-                 <p className="text-sm text-zinc-600">Dynamic allocation across multiple lending protocols for optimal delta-neutral returns.</p>
+                 <h4 className="text-2xl font-black mb-4 uppercase tracking-tight">Recursive Vaults</h4>
+                 <p className="text-zinc-500 font-medium leading-[1.7]">Dynamic allocation across multiple lending protocols for optimal delta-neutral returns.</p>
               </motion.div>
 
               <motion.div 
@@ -441,8 +441,8 @@ export default function LandingPage() {
                   <Image src="/8.png" alt="UI" width={500} height={500} />
                 </div>
                 <div className="relative z-10 h-full flex flex-col justify-between">
-                  <h3 className="text-4xl font-black italic tracking-tighter leading-none">INITIALIZE <br/>THE FLEET.</h3>
-                  <div className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest">
+                  <h3 className="text-4xl md:text-5xl font-black tracking-tighter leading-none uppercase">INITIALIZE <br/>THE FLEET.</h3>
+                  <div className="flex items-center gap-2 font-black uppercase text-[10px] font-mono tracking-[0.5em]">
                     ACCESS TERMINAL <ArrowRight size={16} />
                   </div>
                 </div>
@@ -476,7 +476,7 @@ export default function LandingPage() {
             }}
             className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none"
           >
-            <span className="text-[30vw] font-black italic tracking-tighter text-white">AETHERIAL</span>
+            <span className="text-[30vw] font-black tracking-tighter text-white">AETHERIAL</span>
           </motion.div>
 
           <div className="relative z-20 text-center space-y-12 max-w-5xl px-6">
@@ -484,7 +484,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="text-7xl md:text-9xl font-bold tracking-tighter italic leading-none"
+              className="text-7xl md:text-9xl font-bold tracking-tighter leading-none"
             >
               Ready to <span className="text-primary underline decoration-primary/20 underline-offset-[20px]">Initialize</span>?
             </motion.h2>
@@ -493,9 +493,9 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.2 }}
-              className="flex flex-col items-center gap-8"
+              className="flex flex-col items-center gap-12"
             >
-              <p className="text-xl text-zinc-400 max-w-2xl leading-relaxed">
+              <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl leading-[1.7] font-medium">
                 Deploy your assets into the most advanced agentic environment in the multiverse. Built for the era of sovereign code and automated alpha.
               </p>
               
@@ -516,9 +516,11 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex flex-col md:flex-row justify-between items-start gap-20">
               <div className="space-y-6">
-                <div className="flex items-center gap-2">
-                  <Cpu size={24} className="text-primary" />
-                  <span className="text-2xl font-bold tracking-tighter uppercase italic">Aetherial</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 flex items-center justify-center overflow-hidden rounded-xl">
+                    <Image src="/logo.png" alt="Aetherial Logo" width={32} height={32} className="object-contain" />
+                  </div>
+                  <span className="text-2xl font-bold tracking-tighter uppercase">Aetherial</span>
                 </div>
                 <p className="max-w-xs text-zinc-500 font-bold text-[10px] uppercase tracking-[0.2em] leading-loose">
                   Industrial-grade trust layer for the agentic economy. Constructed on OKX X Layer.

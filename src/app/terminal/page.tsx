@@ -9,6 +9,7 @@ import {
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { formatEther } from 'viem';
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { useAetherial, useVaultStats, useAgentData } from '@/hooks/useAetherial';
@@ -127,7 +128,7 @@ export default function AetherialTerminal() {
             <Lock size={36} className="text-primary" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase italic">Access Restricted</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-white uppercase">Access Restricted</h1>
             <p className="text-sm text-zinc-500 leading-relaxed font-medium">
               Connect your wallet to access the Aetherial Prime Broker on OKX X Layer Testnet.
             </p>
@@ -151,12 +152,12 @@ export default function AetherialTerminal() {
       {/* Navbar */}
       <nav className="h-16 border-b border-zinc-900 bg-black/50 backdrop-blur-xl flex items-center justify-between px-8 sticky top-0 z-50">
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center group-hover:bg-primary/90 transition-colors">
-              <Shield className="text-black" size={18} />
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-8 h-8 flex items-center justify-center group-hover:bg-primary/5 transition-all duration-500 overflow-hidden rounded-lg">
+              <Image src="/logo.png" alt="Aetherial Logo" width={24} height={24} className="object-contain" />
             </div>
-            <span className="text-lg font-bold text-white tracking-tighter">
-              AETHERIAL <span className="text-primary italic ml-0.5">PRIME</span>
+            <span className="text-lg font-black text-white tracking-tighter">
+              AETHERIAL <span className="text-primary ml-0.5 uppercase tracking-widest">PRIME</span>
             </span>
           </Link>
           <div className="h-4 w-px bg-zinc-900 mx-2" />
