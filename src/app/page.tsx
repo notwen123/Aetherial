@@ -104,7 +104,6 @@ export default function LandingPage() {
   };
 
   const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
-  const [isLoaded, setIsLoaded] = React.useState(false);
 
   React.useEffect(() => {
     if (!isLoading) {
@@ -145,7 +144,6 @@ export default function LandingPage() {
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.8 }}
           className="fixed top-6 left-1/2 z-[100] w-[calc(100%-3rem)] max-w-5xl"
         >
-          {/* ... existing nav content (kept same) ... */}
           <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full px-8 h-16 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <div className="flex items-center gap-3 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
               <div className="w-8 h-8 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-all duration-500">
@@ -256,24 +254,44 @@ export default function LandingPage() {
         <section id="protocol" className="relative bg-black py-40">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid lg:grid-cols-2 gap-20 items-start">
-              <div className="lg:sticky lg:top-40 flex justify-center py-20">
+              <div className="lg:sticky lg:top-40 flex justify-center py-20 lg:order-last">
                 <motion.div
                   style={{ 
-                    rotate: useTransform(smoothProgress, [0.1, 0.4], [0, 360]),
-                    scale: useTransform(smoothProgress, [0.1, 0.4], [0.8, 1.1])
+                    y: useTransform(smoothProgress, [0.1, 0.4], [0, -40]),
+                    scale: useTransform(smoothProgress, [0.1, 0.4], [0.95, 1.05]),
+                    rotateX: useTransform(smoothProgress, [0.1, 0.4], [10, -10]),
+                    rotateY: useTransform(smoothProgress, [0.1, 0.4], [-5, 5])
                   }}
                   className="relative w-full max-w-[500px] aspect-square"
                 >
-                  <Image 
-                    src="/processor.png" 
-                    alt="Aetherial Core" 
-                    fill 
-                    className="object-contain drop-shadow-[0_0_100px_rgba(163,230,53,0.15)]"
-                  />
+                  <motion.div
+                    animate={{ 
+                      y: [0, -15, 0],
+                      scale: [1, 1.02, 1]
+                    }}
+                    transition={{ 
+                      duration: 4, 
+                      repeat: Infinity, 
+                      ease: "easeInOut" 
+                    }}
+                    className="relative w-full h-full"
+                  >
+                    <Image 
+                      src="/processor.png" 
+                      alt="Aetherial Core" 
+                      fill 
+                      className="object-contain drop-shadow-[0_0_100px_rgba(163,230,53,0.15)] filter"
+                    />
+                    <motion.div 
+                      animate={{ opacity: [0, 0.4, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full"
+                    />
+                  </motion.div>
                 </motion.div>
               </div>
 
-              <div className="space-y-40 py-20">
+              <div className="space-y-40 py-20 lg:order-first">
                 {[
                   { 
                     tag: 'LIQUIDITY ARCHITECTURE',
@@ -296,18 +314,18 @@ export default function LandingPage() {
                 ].map((feature, i) => (
                   <motion.div 
                     key={feature.title}
-                    initial={{ opacity: 0, x: 50 }}
+                    initial={{ opacity: 0, x: -50 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ margin: "-10%" }}
                     transition={{ duration: 1, ease: 'easeOut' }}
-                    className="space-y-8"
+                    className="space-y-6 text-left"
                   >
                     <div className="inline-block px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
                       {feature.tag}
                     </div>
-                    <h3 className="text-5xl md:text-7xl font-bold tracking-tighter italic leading-none">{feature.title}</h3>
-                    <p className="text-xl text-zinc-500 leading-relaxed max-w-xl">{feature.desc}</p>
-                    <div className="relative h-[300px] w-full rounded-[40px] overflow-hidden border border-zinc-900 bg-zinc-950/50 flex items-center justify-center group">
+                    <h3 className="text-4xl md:text-6xl font-black tracking-tighter italic leading-none uppercase">{feature.title}</h3>
+                    <p className="text-lg text-zinc-500 leading-relaxed max-w-xl font-bold">{feature.desc}</p>
+                    <div className="relative h-[300px] w-full rounded-[48px] overflow-hidden border border-zinc-900 bg-zinc-950/50 flex items-center justify-center group">
                       <Image 
                         src={feature.img} 
                         alt={feature.title} 
@@ -334,6 +352,21 @@ export default function LandingPage() {
             </div>
 
             <div className="grid md:grid-cols-12 gap-6 h-[800px]">
+              {/* Sidebar Feature */}
+              <motion.div 
+                whileHover={{ y: -10, rotateX: 4, rotateY: 4 }}
+                style={{ transformStyle: 'preserve-3d' }}
+                className="md:col-span-4 bg-zinc-950 border border-zinc-900 rounded-[48px] p-8 relative overflow-hidden flex flex-col justify-center group cursor-default"
+              >
+                 <div className="absolute inset-0 opacity-10 group-hover:scale-110 transition-transform duration-1000">
+                   <Image src="/5.png" alt="UI" fill className="object-cover" />
+                 </div>
+                 <div className="relative z-10 space-y-2">
+                    <Zap className="text-primary" size={24} />
+                    <h4 className="text-xl font-bold italic transition-colors group-hover:text-primary uppercase">Flash Rebalancers</h4>
+                 </div>
+              </motion.div>
+
               {/* Main Feature */}
               <motion.div 
                 whileHover={{ y: -10, rotateX: 2, rotateY: -2 }}
@@ -345,28 +378,25 @@ export default function LandingPage() {
                 </div>
                 <div className="relative z-10 space-y-4">
                   <Shield className="text-primary mb-4" size={40} />
-                  <h3 className="text-4xl font-bold tracking-tight">EAS Infrastructure.</h3>
-                  <p className="text-zinc-500 max-w-md">The most secure on-chain verification layer for autonomous entities, integrated natively into the Aetherial dashboard.</p>
+                  <h3 className="text-4xl font-black tracking-tight uppercase italic">EAS Infrastructure.</h3>
+                  <p className="text-zinc-500 max-w-md font-bold text-sm tracking-wide">The most secure on-chain verification layer for autonomous entities, integrated natively into the Aetherial dashboard.</p>
                 </div>
               </motion.div>
-
-              <div className="md:col-span-4 grid gap-6">
-                <motion.div whileHover={{ y: -5 }} className="bg-zinc-950 border border-zinc-900 rounded-[48px] p-8 relative overflow-hidden flex flex-col justify-center group cursor-default">
-                   <div className="absolute inset-0 opacity-10 group-hover:scale-110 transition-transform duration-1000">
-                     <Image src="/5.png" alt="UI" fill className="object-cover" />
-                   </div>
-                   <div className="relative z-10 space-y-2">
-                      <Zap className="text-primary" size={24} />
-                      <h4 className="text-xl font-bold italic transition-colors group-hover:text-primary">Flash Rebalancers</h4>
-                   </div>
-                </motion.div>
-                <motion.div whileHover={{ y: -5 }} className="bg-primary/5 border border-primary/10 rounded-[48px] p-10 flex flex-col justify-center gap-4 group cursor-default">
-                   <div className="text-4xl font-bold text-primary italic font-mono tracking-tighter">1.2ms</div>
-                   <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest leading-relaxed">Execution latency on high-frequency vault rebalancing.</p>
-                </motion.div>
-              </div>
-
-              <motion.div whileHover={{ y: -5 }} className="md:col-span-5 bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 relative overflow-hidden group cursor-default">
+              <motion.div 
+                whileHover={{ y: -10, rotateX: 4, rotateY: -4 }}
+                style={{ transformStyle: 'preserve-3d' }}
+                className="bg-primary/5 border border-primary/10 rounded-[48px] p-10 flex flex-col justify-center gap-4 group cursor-default"
+              >
+                 <div className="text-4xl font-bold text-primary italic font-mono tracking-tighter shadow-primary/20 drop-shadow-2xl">1.2ms</div>
+                 <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest leading-relaxed">Execution latency on high-frequency vault rebalancing.</p>
+              </motion.div>
+              
+              {/* Bottom Row */}
+              <motion.div 
+                whileHover={{ y: -10, rotateX: -2, rotateY: 2 }}
+                style={{ transformStyle: 'preserve-3d' }}
+                className="md:col-span-5 bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 relative overflow-hidden group cursor-default"
+              >
                  <div className="absolute bottom-[-10%] right-[-10%] w-1/2 opacity-20 group-hover:rotate-12 transition-transform duration-700">
                    <Image src="/6.png" alt="UI" width={300} height={300} />
                  </div>
@@ -375,8 +405,9 @@ export default function LandingPage() {
               </motion.div>
 
               <motion.div 
-                whileHover={{ y: -5 }}
-                className="md:col-span-7 bg-[#A3E635] text-black rounded-[48px] p-12 relative overflow-hidden group cursor-pointer"
+                whileHover={{ y: -10, rotateX: -2, rotateY: -2 }}
+                style={{ transformStyle: 'preserve-3d' }}
+                className="md:col-span-7 bg-[#A3E635] text-black rounded-[48px] p-12 relative overflow-hidden group cursor-pointer shadow-[0_0_50px_rgba(163,230,53,0)] hover:shadow-[0_0_50px_rgba(163,230,53,0.3)] transition-shadow duration-500"
                 onClick={handleLaunch}
               >
                 <div className="absolute top-[-20%] right-[-10%] w-2/3 opacity-30 grayscale contrast-200 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
