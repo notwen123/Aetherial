@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -9,16 +9,42 @@ import {
   ChevronRight, Globe, Lock, Code2,
   Twitter, Github, MessageSquare,
   Activity, Star, Zap as ZapIcon,
-  ShieldCheck, ArrowUpRight, Plus
+  ShieldCheck, ArrowUpRight, Plus, Rocket
 } from 'lucide-react';
 import { useAccount, useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { useRouter } from 'next/navigation';
+import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence, useVelocity } from 'framer-motion';
+
+function ScrollSkew({ children }: { children: React.ReactNode }) {
+  const { scrollY } = useScroll();
+  const scrollVelocity = useVelocity(scrollY);
+  const skew = useTransform(scrollVelocity, [-2000, 2000], [-5, 5]);
+  const smoothSkew = useSpring(skew, { stiffness: 100, damping: 30 });
+
+  return (
+    <motion.div style={{ skewY: smoothSkew }} className="origin-center">
+      {children}
+    </motion.div>
+  );
+}
 
 export default function LandingPage() {
   const { isConnected } = useAccount();
   const { connect } = useConnect();
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
 
   const handleLaunch = () => {
     if (!isConnected) {
@@ -32,13 +58,11 @@ export default function LandingPage() {
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   React.useEffect(() => {
-    // Stage the entry for a cinematic sweep
-    const timer = setTimeout(() => setIsLoaded(true), 200);
-    
+    const timer = setTimeout(() => setIsLoaded(true), 100);
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX, clientY } = e;
-      const x = (clientX / window.innerWidth - 0.5) * 20;
-      const y = (clientY / window.innerHeight - 0.5) * 20;
+      const x = (clientX / window.innerWidth - 0.5) * 40;
+      const y = (clientY / window.innerHeight - 0.5) * 40;
       setMousePos({ x, y });
     };
     window.addEventListener('mousemove', handleMouseMove);
@@ -48,326 +72,375 @@ export default function LandingPage() {
     };
   }, []);
 
+  // Parallax transforms for Hero
+  const videoY = useTransform(smoothProgress, [0, 0.2], ["0%", "20%"]);
+  const heroOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
+  const heroScale = useTransform(smoothProgress, [0, 0.15], [1, 0.9]);
+
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-primary/30 font-sans scroll-smooth overflow-x-hidden">
-      {/* Floating Navigation */}
-      <nav 
-        className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-3rem)] max-w-5xl transition-all duration-1000 ease-out ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}
-        style={{ transitionDelay: '800ms' }}
-      >
-        <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full px-8 h-16 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-          <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="w-8 h-8 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-all duration-500">
-              <Cpu size={18} className="text-primary" />
+    <main ref={containerRef} className="bg-black text-white selection:bg-primary/30 font-sans overflow-x-hidden">
+      <ScrollSkew>
+        {/* Floating Navigation */}
+        <motion.nav 
+          initial={{ y: -100, x: "-50%", opacity: 0 }}
+          animate={isLoaded ? { y: 0, x: "-50%", opacity: 1 } : { y: -100, x: "-50%", opacity: 0 }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.8 }}
+          className="fixed top-6 left-1/2 z-[100] w-[calc(100%-3rem)] max-w-5xl"
+        >
+          {/* ... existing nav content (kept same) ... */}
+          <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full px-8 h-16 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <div className="flex items-center gap-3 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <div className="w-8 h-8 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-all duration-500">
+                <Cpu size={18} className="text-primary" />
+              </div>
+              <span className="text-sm font-black tracking-tighter uppercase italic">Aetherial</span>
             </div>
-            <span className="text-sm font-black tracking-tighter uppercase italic">Aetherial</span>
+
+            <div className="hidden lg:flex items-center gap-8">
+              {['Protocol', 'Ecosystem', 'Governance', 'Docs'].map(item => (
+                <a key={item} href={`#${item.toLowerCase()}`} className="text-[9px] font-black text-zinc-500 hover:text-primary transition-colors uppercase tracking-[0.3em]">{item}</a>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleLaunch}
+                className="bg-primary text-black px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:brightness-110 hover:scale-105 transition-all flex items-center gap-2 active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.2)]"
+              >
+                {isConnected ? 'Terminal' : 'Initialize'} <TerminalIcon size={12} />
+              </button>
+            </div>
           </div>
+        </motion.nav>
 
-          <div className="hidden lg:flex items-center gap-8">
-            {['Protocol', 'Ecosystem', 'Governance', 'Docs'].map(item => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="text-[9px] font-black text-zinc-500 hover:text-primary transition-colors uppercase tracking-[0.3em]">{item}</a>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleLaunch}
-              className="bg-primary text-black px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:brightness-110 hover:scale-105 transition-all flex items-center gap-2 active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.2)]"
-            >
-              {isConnected ? 'Terminal' : 'Initialize'} <TerminalIcon size={12} />
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="relative h-screen overflow-hidden bg-black flex items-center justify-center">
-        {/* Layer 0: Background Environment */}
-        <div className={`absolute inset-0 z-0 transition-all duration-[2000ms] ease-out ${isLoaded ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-110 blur-2xl'}`}>
-          <video 
-            src="/hero.webm" 
-            autoPlay 
-            muted 
-            loop 
-            playsInline
-            className="w-full h-full object-cover brightness-[1.05] contrast-[1.08] saturate-[1.05]"
-            style={{ 
-              imageRendering: 'auto',
-              filter: 'contrast(1.08) brightness(1.03)'
-            }}
-          />
-        </div>
-
-        {/* Layer 1: Spatial UI Interaction Layer */}
-        <div className={`absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-1000 delay-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-          {/* Invisible 'Connect/Enter' Button mapped to video geometry */}
-          <button
-            onClick={handleLaunch}
-            className="absolute top-[68%] left-1/2 -translate-x-1/2 w-[320px] h-[60px] cursor-pointer hover:bg-white/5 transition-colors border border-transparent rounded-lg"
-            aria-label="Enter Platform"
-          />
-          
-          {/* Subtle status indicators (kept for industrial feel, but minimal) */}
-          <div 
-            className="absolute bottom-[8%] left-1/2 -translate-x-1/2 pointer-events-none flex gap-10 items-center opacity-40"
-            style={{ transform: `translate3d(${mousePos.x * 0.1}px, ${mousePos.y * 0.1}px, 0) translateX(-50%)` }}
+        {/* Section 1: Cinematic Hero */}
+        <section className="relative h-[110vh] overflow-hidden bg-black flex items-center justify-center">
+          <motion.div 
+            style={{ y: videoY, opacity: heroOpacity, scale: heroScale }}
+            className="absolute inset-0 z-0"
           >
-             <div className="text-[8px] font-black text-zinc-500 uppercase tracking-[0.4em] flex items-center gap-3">
-               <span className="w-1.5 h-1.5 bg-primary rounded-full" /> 
-               Network Status: Online
-             </div>
-             <div className="text-[8px] font-black text-zinc-500 uppercase tracking-[0.4em] flex items-center gap-3">
-               <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" /> 
-               42 active agents verifiably audited
-             </div>
-          </div>
-        </div>
+            <video 
+              src="/hero.webm" 
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              className="w-full h-full object-cover brightness-[1.1] contrast-[1.05]"
+            />
+            <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+            <div className="absolute inset-0 pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
+          </motion.div>
 
-        {/* Cinematic Scrim (Minimal - only at extreme bottom) */}
-        <div className="absolute inset-x-0 bottom-0 h-1/6 bg-gradient-to-t from-black to-transparent z-[5]" />
-        <div className="absolute inset-0 pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] mix-blend-overlay z-20" />
-      </section>
-
-      {/* Protocol Stats - Integrated into Scene flow */}
-      <section className="py-24 border-b border-zinc-950 bg-black relative z-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center md:text-left">
-            <div>
-              <div className="text-[10px] text-zinc-600 uppercase font-black tracking-[0.3em] mb-3">Allocated TVL</div>
-              <div className="text-4xl md:text-5xl font-bold tracking-tighter text-white font-mono">$1.42B <span className="text-primary text-sm tracking-normal align-top">+12%</span></div>
-            </div>
-            <div>
-              <div className="text-[10px] text-zinc-600 uppercase font-black tracking-[0.3em] mb-3">Trades Executed</div>
-              <div className="text-4xl md:text-5xl font-bold tracking-tighter text-white font-mono">824.1K</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-zinc-600 uppercase font-black tracking-[0.3em] mb-3">EAS Attestations</div>
-              <div className="text-4xl md:text-5xl font-bold tracking-tighter text-white font-mono">12,042</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-zinc-600 uppercase font-black tracking-[0.3em] mb-3">Protocol Fees</div>
-              <div className="text-4xl md:text-5xl font-bold tracking-tighter text-white font-mono">$4.8M</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Value Pillars */}
-      <section id="protocol" className="py-32 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-end gap-10 mb-20">
-            <div className="space-y-4 max-w-2xl">
-              <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">The Agentic Cycle.</h2>
-              <p className="text-lg text-zinc-500">Traditional prime brokers rely on trust and lawyers. Aetherial relies on TEE execution and EAS reputation logic.</p>
-            </div>
-            <Link href="/docs" className="text-xs font-black text-primary uppercase tracking-widest border-b border-primary/30 pb-1 hover:border-primary transition-all">Deep Dive Technicals →</Link>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { 
-                icon: ZapIcon, 
-                title: 'Autonomous Yield', 
-                desc: 'Agents run 24/7 rebalancing vaults across Uniswap and Aave, governed by strictly encoded profit-sharing mandates.',
-                stat: '15.2% Avg APY'
-              },
-              { 
-                icon: ShieldCheck, 
-                title: 'EAS Reputation', 
-                desc: 'Every trade is anchored to the Ethereum Attestation Service. High-scoring agents earn "Reputation NFTs" to unlock more capital.',
-                stat: '99.9% Verified'
-              },
-              { 
-                icon: Activity, 
-                title: 'X Layer Native', 
-                desc: 'Built on OKX X Layer for sub-second trade finality and institutional-grade gas efficiency during heavy volatility cycles.',
-                stat: '1.2s Finality'
-              }
-            ].map((pillar) => (
-              <div key={pillar.title} className="group p-8 bg-zinc-950 border border-zinc-900 rounded-[32px] hover:border-primary/20 transition-all duration-500 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                  <pillar.icon size={120} />
+          <AnimatePresence>
+            {isLoaded && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.5, delay: 0.5 }}
+                className="relative z-10 w-full max-w-7xl px-6 flex flex-col items-center select-none"
+              >
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full flex items-center justify-center pointer-events-none">
+                  <button
+                    onClick={handleLaunch}
+                    className="w-[320px] h-[60px] pointer-events-auto rounded-xl hover:bg-white/5 transition-colors border border-transparent"
+                    aria-label="Enter Platform"
+                  />
                 </div>
-                <div className="relative z-10 space-y-6">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 group-hover:bg-primary group-hover:text-black transition-all duration-500">
-                    <pillar.icon size={28} />
+
+                <div 
+                  className="absolute bottom-20 flex gap-12 opacity-40 transition-transform duration-700 ease-out"
+                  style={{ transform: `translate3d(${mousePos.x * 0.15}px, ${mousePos.y * 0.15}px, 0)` }}
+                >
+                   <div className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.4em] flex items-center gap-3">
+                     <div className="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(163,230,53,0.5)]" /> 
+                     X-LAYER CLUSTER: OPTIMAL
+                   </div>
+                   <div className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.4em] flex items-center gap-3">
+                     <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(163,230,53,0.5)]" /> 
+                     42 AGENTS ONLINE
+                   </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
+
+        {/* Section 2: Industrial Stats */}
+        <section className="relative z-20 py-32 bg-black border-y border-zinc-900">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-16">
+              {[
+                { label: 'ALLOCATED TVL', val: '$1.42B', sub: '+12.4%' },
+                { label: 'TRADES EXECUTED', val: '824,103', sub: 'REAL-TIME' },
+                { label: 'EAS ATTESTATIONS', val: '12,042', sub: 'VERIFIED' },
+                { label: 'PROTOCOL FEES', val: '$4.8M', sub: 'YTD' }
+              ].map((stat, i) => (
+                <motion.div 
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.8 }}
+                  className="space-y-2 group"
+                >
+                  <div className="text-[10px] text-zinc-600 uppercase font-black tracking-[0.3em] group-hover:text-primary transition-colors">{stat.label}</div>
+                  <div className="text-5xl font-bold tracking-tighter text-white font-mono flex items-baseline gap-2">
+                    {stat.val} 
+                    {stat.sub.includes('%') && <span className="text-primary text-xs tracking-normal align-top">{stat.sub}</span>}
                   </div>
-                  <h3 className="text-2xl font-bold">{pillar.title}</h3>
-                  <p className="text-zinc-500 text-sm leading-relaxed">{pillar.desc}</p>
-                  <div className="pt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    {pillar.stat}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Trust & Economics Section */}
-      <section className="py-32 bg-zinc-950/30 border-y border-zinc-900">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-24 items-center">
-            <div className="relative perspective-3000">
-              <Image 
-                src="/2.png" 
-                alt="Agent Reputation" 
-                width={800} 
-                height={800} 
-                className="w-full h-auto drop-shadow-[0_0_60px_rgba(163,230,53,0.1)] scale-105"
-              />
-            </div>
-            <div className="space-y-10">
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Institutional Verification</h3>
-                <h2 className="text-5xl md:text-7xl font-bold tracking-tighter leading-none text-white italic">Immutable Authority.</h2>
-                <p className="text-lg text-zinc-400 leading-relaxed">
-                  In the agentic era, credit is code. Our EAS-powered scoring engine analyzes agent performance, risk-adjusted returns, and strategy safety to issue dynamic on-chain reputation markers.
-                </p>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-8">
-                <div className="p-6 rounded-2xl bg-zinc-950 border border-zinc-900 shadow-xl">
-                  <div className="text-primary font-bold text-lg mb-1 italic">950+</div>
-                  <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest leading-none">Min. Credit for Premium Vaults</div>
-                </div>
-                <div className="p-6 rounded-2xl bg-zinc-950 border border-zinc-900 shadow-xl">
-                  <div className="text-white font-bold text-lg mb-1 italic">5.2K</div>
-                  <div className="text-[10px] text-zinc-600 uppercase font-black tracking-widest leading-none">Reputation NFTs Minted</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full border border-primary/20 bg-primary/5 flex items-center justify-center text-primary">
-                    <ShieldCheck size={20} />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-white uppercase">EAS HUB Verified</div>
-                    <div className="text-[9px] text-zinc-500 uppercase">Audit ID: 824-OKX-91</div>
-                  </div>
-                </div>
-              </div>
+                </motion.div>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Technology Stack Grid */}
-      <section id="ecosystem" className="py-32">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center space-y-4 mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">Powered by the Frontier.</h2>
-            <p className="text-zinc-500 max-w-xl mx-auto">Seamlessly integrated with the core infrastructure of the on-chain economy.</p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-zinc-900 border border-zinc-900 overflow-hidden rounded-[40px] shadow-2xl">
-            {[
-              { name: 'X Layer', label: 'Infrastructure', icon: Globe },
-              { name: 'EAS', label: 'Trust Layer', icon: Shield },
-              { name: 'Uniswap V4', label: 'Liquidity', icon: ZapIcon },
-              { name: 'Aave', label: 'Lending', icon: Layers },
-              { name: 'TEE', label: 'Security', icon: Lock },
-              { name: 'Viem', label: 'Logic', icon: Code2 },
-              { name: 'StitchMCP', label: 'Generation', icon: TerminalIcon },
-              { name: 'Aetherial', label: 'Master Engine', icon: Cpu }
-            ].map(partner => (
-              <div key={partner.name} className="p-10 bg-black flex flex-col items-center justify-center text-center group hover:bg-zinc-950 transition-colors cursor-default">
-                <partner.icon size={32} className="text-zinc-800 group-hover:text-primary transition-colors mb-6" />
-                <div className="text-sm font-bold tracking-tight text-white mb-1">{partner.name}</div>
-                <div className="text-[9px] text-zinc-600 uppercase font-black tracking-widest">{partner.label}</div>
+        {/* Section 3: The Core Engine (Sticky Reveal) */}
+        <section id="protocol" className="relative bg-black py-40">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid lg:grid-cols-2 gap-20 items-start">
+              <div className="lg:sticky lg:top-40 flex justify-center py-20">
+                <motion.div
+                  style={{ 
+                    rotate: useTransform(smoothProgress, [0.1, 0.4], [0, 360]),
+                    scale: useTransform(smoothProgress, [0.1, 0.4], [0.8, 1.1])
+                  }}
+                  className="relative w-full max-w-[500px] aspect-square"
+                >
+                  <Image 
+                    src="/processor.png" 
+                    alt="Aetherial Core" 
+                    fill 
+                    className="object-contain drop-shadow-[0_0_100px_rgba(163,230,53,0.15)]"
+                  />
+                </motion.div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* CTA Section */}
-      <section className="py-40 relative">
-        <div className="absolute inset-0 bg-primary/5 blur-[120px] rounded-full scale-50" />
-        <div className="max-w-5xl mx-auto px-6 text-center space-y-12 relative z-10">
-          <h2 className="text-6xl md:text-8xl font-bold tracking-tighter italic">Ready to <span className="text-primary underline decoration-primary/30 underline-offset-8">Initalize</span>?</h2>
-          <p className="text-xl text-zinc-500 max-w-2xl mx-auto">Join the decentralized liquidity revolution. 
-            Deploy your assets into the most advanced agentic environment on OKX X Layer.</p>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <button
-              onClick={handleLaunch}
-              className="px-12 py-6 bg-primary text-black rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 transition-all shadow-[0_40px_80px_-20px_rgba(163,230,53,0.4)]"
+              <div className="space-y-40 py-20">
+                {[
+                  { 
+                    tag: 'LIQUIDITY ARCHITECTURE',
+                    title: 'Autonomous Yield Allocation.',
+                    desc: 'Aetherial agents utilize TEE execution to manage liquidity across Uniswap V4 and Aave. Every rebalance is governed by strictly encoded profit-sharing mandates without human intermediaries.',
+                    img: '/3.png'
+                  },
+                  { 
+                    tag: 'TRUST PROTOCOL',
+                    title: 'Reputation-as-a-Service.',
+                    desc: 'Every trade is anchored to the Ethereum Attestation Service (EAS). High-scoring agents mint dynamic "Reputation NFTs" that grant access to institutional-grade capital vaults.',
+                    img: '/2.png'
+                  },
+                  { 
+                    tag: 'NETWORK FINALITY',
+                    title: 'Engineered on X Layer.',
+                    desc: 'Sub-second finality meets sub-cent gas costs. Optimized for high-frequency prime brokerage operations during periods of extreme market volatility.',
+                    img: '/9.png'
+                  }
+                ].map((feature, i) => (
+                  <motion.div 
+                    key={feature.title}
+                    initial={{ opacity: 0, x: 50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ margin: "-10%" }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className="space-y-8"
+                  >
+                    <div className="inline-block px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
+                      {feature.tag}
+                    </div>
+                    <h3 className="text-5xl md:text-7xl font-bold tracking-tighter italic leading-none">{feature.title}</h3>
+                    <p className="text-xl text-zinc-500 leading-relaxed max-w-xl">{feature.desc}</p>
+                    <div className="relative h-[300px] w-full rounded-[40px] overflow-hidden border border-zinc-900 bg-zinc-950/50 flex items-center justify-center group">
+                      <Image 
+                        src={feature.img} 
+                        alt={feature.title} 
+                        width={600}
+                        height={400}
+                        className="object-contain p-12 group-hover:scale-105 transition-transform duration-700"
+                      />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 4: Intelligence Grid (Bento) */}
+        <section id="ecosystem" className="py-40 bg-zinc-950/20">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-10 mb-24">
+              <h2 className="text-6xl md:text-8xl font-bold tracking-tighter italic">Frontier Logic.</h2>
+              <Link href="/docs" className="group flex items-center gap-3 text-xs font-black text-primary uppercase tracking-widest bg-primary/10 px-6 py-3 rounded-full border border-primary/20 hover:bg-primary hover:text-black transition-all">
+                Audit the Engine <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="grid md:grid-cols-12 gap-6 h-[800px]">
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="md:col-span-8 bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 relative overflow-hidden flex flex-col justify-end group cursor-default"
+              >
+                <div className="absolute top-0 right-0 p-12 opacity-20 pointer-events-none group-hover:scale-105 transition-transform duration-1000">
+                  <Image src="/4.png" alt="UI" width={400} height={400} className="object-contain" />
+                </div>
+                <div className="relative z-10 space-y-4">
+                  <Shield className="text-primary mb-4" size={40} />
+                  <h3 className="text-4xl font-bold tracking-tight">EAS Infrastructure.</h3>
+                  <p className="text-zinc-500 max-w-md">The most secure on-chain verification layer for autonomous entities, integrated natively into the Aetherial dashboard.</p>
+                </div>
+              </motion.div>
+
+              <div className="md:col-span-4 grid gap-6">
+                <motion.div whileHover={{ y: -5 }} className="bg-zinc-950 border border-zinc-900 rounded-[48px] p-8 relative overflow-hidden flex flex-col justify-center group cursor-default">
+                   <div className="absolute inset-0 opacity-10 group-hover:scale-110 transition-transform duration-1000">
+                     <Image src="/5.png" alt="UI" fill className="object-cover" />
+                   </div>
+                   <div className="relative z-10 space-y-2">
+                      <Zap className="text-primary" size={24} />
+                      <h4 className="text-xl font-bold italic transition-colors group-hover:text-primary">Flash Rebalancers</h4>
+                   </div>
+                </motion.div>
+                <motion.div whileHover={{ y: -5 }} className="bg-primary/5 border border-primary/10 rounded-[48px] p-10 flex flex-col justify-center gap-4 group cursor-default">
+                   <div className="text-4xl font-bold text-primary italic font-mono tracking-tighter">1.2ms</div>
+                   <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest leading-relaxed">Execution latency on high-frequency vault rebalancing.</p>
+                </motion.div>
+              </div>
+
+              <motion.div whileHover={{ y: -5 }} className="md:col-span-5 bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 relative overflow-hidden group cursor-default">
+                 <div className="absolute bottom-[-10%] right-[-10%] w-1/2 opacity-20 group-hover:rotate-12 transition-transform duration-700">
+                   <Image src="/6.png" alt="UI" width={300} height={300} />
+                 </div>
+                 <h4 className="text-2xl font-bold italic mb-4">Recursive Vaults</h4>
+                 <p className="text-sm text-zinc-600">Dynamic allocation across multiple lending protocols for optimal delta-neutral returns.</p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="md:col-span-7 bg-[#A3E635] text-black rounded-[48px] p-12 relative overflow-hidden group cursor-pointer"
+                onClick={handleLaunch}
+              >
+                <div className="absolute top-[-20%] right-[-10%] w-2/3 opacity-30 grayscale contrast-200 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
+                  <Image src="/8.png" alt="UI" width={500} height={500} />
+                </div>
+                <div className="relative z-10 h-full flex flex-col justify-between">
+                  <h3 className="text-4xl md:text-5xl font-black italic tracking-tighter leading-none">INITIALIZE <br/>THE FLEET.</h3>
+                  <div className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest">
+                    ACCESS TERMINAL <ArrowRight size={16} />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 5: World's Best CTA Footer (Cinematic) */}
+        <section className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
+          <motion.div 
+            style={{ 
+              scale: useTransform(smoothProgress, [0.8, 1], [1.2, 1]),
+              opacity: useTransform(smoothProgress, [0.85, 0.95], [0, 1])
+            }}
+            className="absolute inset-0 z-0"
+          >
+            <Image 
+              src="/orbital.png" 
+              alt="Orbital Data Center" 
+              fill 
+              className="object-cover brightness-50 contrast-125"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />
+          </motion.div>
+
+          <motion.div 
+            style={{ 
+              x: useTransform(smoothProgress, [0.8, 1], ["-10%", "10%"]),
+              opacity: useTransform(smoothProgress, [0.9, 1], [0, 0.03])
+            }}
+            className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none"
+          >
+            <span className="text-[30vw] font-black italic tracking-tighter text-white">AETHERIAL</span>
+          </motion.div>
+
+          <div className="relative z-20 text-center space-y-12 max-w-5xl px-6">
+            <motion.h2 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="text-7xl md:text-9xl font-bold tracking-tighter italic leading-none"
             >
-              Enter the Terminal
-            </button>
-            <div className="flex items-center gap-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">
-              <span className="w-10 h-px bg-zinc-800" />
-              Developer Alpha v1.02
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Institutional Footer */}
-      <footer className="bg-black border-t border-zinc-900 py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-16 mb-20">
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center">
-                  <Cpu size={18} className="text-primary" />
-                </div>
-                <span className="text-lg font-bold tracking-tighter uppercase italic">Aetherial</span>
-              </div>
-              <p className="text-xs text-zinc-600 leading-relaxed font-bold uppercase tracking-widest">
-                The leading agentic prime broker <br />
-                on the OKX X Layer network.
+              Ready to <span className="text-primary underline decoration-primary/20 underline-offset-[20px]">Initialize</span>?
+            </motion.h2>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="flex flex-col items-center gap-8"
+            >
+              <p className="text-xl text-zinc-400 max-w-2xl leading-relaxed">
+                Deploy your assets into the most advanced agentic environment in the multiverse. Built for the era of sovereign code and automated alpha.
               </p>
-              <div className="flex gap-4">
-                <Twitter size={18} className="text-zinc-600 hover:text-primary cursor-pointer" />
-                <Github size={18} className="text-zinc-600 hover:text-primary cursor-pointer" />
-                <MessageSquare size={18} className="text-zinc-600 hover:text-primary cursor-pointer" />
+              
+              <button
+                onClick={handleLaunch}
+                className="group relative px-16 py-8 bg-primary text-black rounded-3xl text-sm font-black uppercase tracking-[0.3em] overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_80px_rgba(163,230,53,0.3)] hover:shadow-[0_0_120px_rgba(163,230,53,0.5)]"
+              >
+                <span className="relative z-10 flex items-center gap-3">
+                  <Rocket size={18} /> INITIALIZE PRIME BROKER
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/40 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+              </button>
+            </motion.div>
+          </div>
+        </section>
+
+        <footer className="py-20 bg-black border-t border-zinc-900 relative z-30">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-20">
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <Cpu size={24} className="text-primary" />
+                  <span className="text-2xl font-bold tracking-tighter uppercase italic">Aetherial</span>
+                </div>
+                <p className="max-w-xs text-zinc-500 font-bold text-[10px] uppercase tracking-[0.2em] leading-loose">
+                  Industrial-grade trust layer for the agentic economy. Constructed on OKX X Layer.
+                </p>
+                <div className="flex gap-6 text-zinc-600">
+                  <Twitter className="hover:text-primary cursor-pointer transition-colors" size={20} />
+                  <Github className="hover:text-primary cursor-pointer transition-colors" size={20} />
+                  <MessageSquare className="hover:text-primary cursor-pointer transition-colors" size={20} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-20">
+                {[
+                  { title: 'Protocol', links: ['Terminal', 'Vaults', 'Governance'] },
+                  { title: 'Ecosystem', links: ['EAS Hub', 'Uniswap', 'Aave'] },
+                  { title: 'Safety', links: ['Audits', 'Status', 'TEE Docs'] }
+                ].map(group => (
+                  <div key={group.title} className="space-y-6">
+                    <h4 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">{group.title}</h4>
+                    <ul className="space-y-4">
+                      {group.links.map(link => (
+                        <li key={link} className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest hover:text-primary cursor-pointer transition-colors">{link}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
             </div>
-
-            <div>
-              <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-8">Platform</h4>
-              <ul className="space-y-4 text-xs font-bold text-zinc-600 uppercase tracking-widest">
-                {['Terminal', 'Liquidity Hub', 'Agent Registry', 'Credit Scores'].map(l => (
-                  <li key={l} className="hover:text-primary cursor-pointer transition-colors">{l}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-8">Resources</h4>
-              <ul className="space-y-4 text-xs font-bold text-zinc-600 uppercase tracking-widest">
-                {['Documentation', 'Agent SDK', 'Audit Logs', 'Status'].map(l => (
-                  <li key={l} className="hover:text-primary cursor-pointer transition-colors">{l}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-8">Newsletter</h4>
-              <p className="text-xs text-zinc-600 mb-6 font-bold uppercase tracking-widest leading-loose">Get the latest agentic alpha delivered to your inbox.</p>
-              <div className="flex gap-2">
-                <input type="text" placeholder="GHOST@AETHERIAL.SH" className="bg-zinc-950 border border-zinc-900 rounded-lg px-4 py-2 text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 flex-1" />
-                <button className="bg-zinc-800 px-4 py-2 rounded-lg text-primary hover:bg-zinc-700 transition-colors">
-                  <Plus size={14} />
-                </button>
+            
+            <div className="pt-20 mt-20 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-8">
+              <div className="text-[10px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2026 AETHERIAL PROTOCOL • DESIGNED FOR SOVEREIGN AGENTS</div>
+              <div className="flex gap-10 text-[10px] font-bold text-zinc-700 uppercase tracking-widest">
+                <span className="hover:text-white cursor-pointer transition-colors">Audit Path</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Privacy Logic</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Terminus</span>
               </div>
             </div>
           </div>
-
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-10 border-t border-zinc-900/50">
-            <div className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.4em]">© 2026 AETHERIAL PROTOCOL • ALL RIGHTS RESERVED</div>
-            <div className="flex gap-8 text-[10px] font-bold text-zinc-700 uppercase tracking-widest">
-              <span className="hover:text-white cursor-pointer">Privacy</span>
-              <span className="hover:text-white cursor-pointer">Terms</span>
-              <span className="hover:text-white cursor-pointer">Licensing</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      </ScrollSkew>
     </main>
   );
 }
