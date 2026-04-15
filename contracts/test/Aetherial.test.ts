@@ -1,8 +1,9 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { AetherialVault, AgentRegistry, AetherialToken, ReputationNFT } from "../typechain-types/contracts/contracts";
-import { EAS, SchemaRegistry } from "../typechain-types/contracts/contracts/eas";
+import { AetherialVault, AgentRegistry, AetherialToken, ReputationNFT } from "../typechain-types";
+// Removed EAS imports as they are likely not needed directly in this test or causing path errors.
+
 
 describe("Aetherial Protocol", function () {
   let vault: AetherialVault;
@@ -73,7 +74,7 @@ describe("Aetherial Protocol", function () {
     await vault.connect(lp).deposit(ethers.parseEther("100"));
     const tooMany = ethers.parseEther("200");
     await expect(vault.connect(lp).withdraw(tooMany))
-      .to.be.revertedWith("Insufficient shares");
+      .to.be.revertedWith("Invalid shares");
   });
 
   // ── Agent whitelist / liquidity ───────────────────────────────────────────
@@ -149,7 +150,7 @@ describe("Aetherial Protocol", function () {
 
     await expect(vault.connect(agent).settleLiquidity(ethers.parseEther("100")))
       .to.emit(vault, "LiquiditySettled")
-      .withArgs(agent.address, ethers.parseEther("100"), 0n);
+      .withArgs(agent.address, ethers.parseEther("100"), 0n, 0n);
 
     expect(await vault.activeAllocations(agent.address)).to.equal(0n);
   });
@@ -222,6 +223,6 @@ describe("Aetherial Protocol", function () {
     // Max allocation = 20% of 500 = 100 AUSD
     // Requesting 101 should revert
     await expect(vault.connect(agent).requestLiquidity(ethers.parseEther("101")))
-      .to.be.revertedWith("Exceeds max allocation for agent");
+      .to.be.revertedWith("Exceeds max allocation");
   });
 });

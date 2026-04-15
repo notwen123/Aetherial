@@ -50,29 +50,46 @@ export declare namespace AgentRegistry {
 export interface AgentRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "DEFAULT_ADMIN_ROLE"
+      | "MANAGER_ROLE"
       | "WHITELIST_THRESHOLD"
       | "agents"
       | "getAgent"
       | "getRegisteredAgents"
-      | "owner"
+      | "getRoleAdmin"
+      | "grantRole"
+      | "hasRole"
       | "registerAgent"
       | "registeredAgents"
-      | "renounceOwnership"
+      | "renounceRole"
       | "reputationNFT"
+      | "revokeRole"
       | "setWhitelisted"
+      | "slashAgent"
+      | "supportsInterface"
       | "totalAgents"
-      | "transferOwnership"
       | "updateCreditScore"
   ): FunctionFragment;
 
   getEvent(
     nameOrSignatureOrTopic:
       | "AgentRegistered"
+      | "AgentSlashed"
       | "CreditScoreUpdated"
-      | "OwnershipTransferred"
+      | "RoleAdminChanged"
+      | "RoleGranted"
+      | "RoleRevoked"
       | "WhitelistStatusChanged"
   ): EventFragment;
 
+  encodeFunctionData(
+    functionFragment: "DEFAULT_ADMIN_ROLE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MANAGER_ROLE",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "WHITELIST_THRESHOLD",
     values?: undefined
@@ -86,7 +103,18 @@ export interface AgentRegistryInterface extends Interface {
     functionFragment: "getRegisteredAgents",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "getRoleAdmin",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "grantRole",
+    values: [BytesLike, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "hasRole",
+    values: [BytesLike, AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "registerAgent",
     values?: undefined
@@ -96,30 +124,46 @@ export interface AgentRegistryInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "renounceOwnership",
-    values?: undefined
+    functionFragment: "renounceRole",
+    values: [BytesLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "reputationNFT",
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "revokeRole",
+    values: [BytesLike, AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setWhitelisted",
     values: [AddressLike, boolean]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "slashAgent",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "supportsInterface",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "totalAgents",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "transferOwnership",
-    values: [AddressLike]
-  ): string;
-  encodeFunctionData(
     functionFragment: "updateCreditScore",
     values: [AddressLike, BigNumberish, string]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "DEFAULT_ADMIN_ROLE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "MANAGER_ROLE",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "WHITELIST_THRESHOLD",
     data: BytesLike
@@ -130,7 +174,12 @@ export interface AgentRegistryInterface extends Interface {
     functionFragment: "getRegisteredAgents",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getRoleAdmin",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "registerAgent",
     data: BytesLike
@@ -140,23 +189,25 @@ export interface AgentRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "renounceOwnership",
+    functionFragment: "renounceRole",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "reputationNFT",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setWhitelisted",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "slashAgent", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "totalAgents",
+    functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "transferOwnership",
+    functionFragment: "totalAgents",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -170,6 +221,28 @@ export namespace AgentRegisteredEvent {
   export type OutputTuple = [agent: string];
   export interface OutputObject {
     agent: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace AgentSlashedEvent {
+  export type InputTuple = [
+    agent: AddressLike,
+    slashPoints: BigNumberish,
+    newScore: BigNumberish
+  ];
+  export type OutputTuple = [
+    agent: string,
+    slashPoints: bigint,
+    newScore: bigint
+  ];
+  export interface OutputObject {
+    agent: string;
+    slashPoints: bigint;
+    newScore: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -195,12 +268,57 @@ export namespace CreditScoreUpdatedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace OwnershipTransferredEvent {
-  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
-  export type OutputTuple = [previousOwner: string, newOwner: string];
+export namespace RoleAdminChangedEvent {
+  export type InputTuple = [
+    role: BytesLike,
+    previousAdminRole: BytesLike,
+    newAdminRole: BytesLike
+  ];
+  export type OutputTuple = [
+    role: string,
+    previousAdminRole: string,
+    newAdminRole: string
+  ];
   export interface OutputObject {
-    previousOwner: string;
-    newOwner: string;
+    role: string;
+    previousAdminRole: string;
+    newAdminRole: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RoleGrantedEvent {
+  export type InputTuple = [
+    role: BytesLike,
+    account: AddressLike,
+    sender: AddressLike
+  ];
+  export type OutputTuple = [role: string, account: string, sender: string];
+  export interface OutputObject {
+    role: string;
+    account: string;
+    sender: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RoleRevokedEvent {
+  export type InputTuple = [
+    role: BytesLike,
+    account: AddressLike,
+    sender: AddressLike
+  ];
+  export type OutputTuple = [role: string, account: string, sender: string];
+  export interface OutputObject {
+    role: string;
+    account: string;
+    sender: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -264,6 +382,10 @@ export interface AgentRegistry extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  DEFAULT_ADMIN_ROLE: TypedContractMethod<[], [string], "view">;
+
+  MANAGER_ROLE: TypedContractMethod<[], [string], "view">;
+
   WHITELIST_THRESHOLD: TypedContractMethod<[], [bigint], "view">;
 
   agents: TypedContractMethod<
@@ -288,15 +410,37 @@ export interface AgentRegistry extends BaseContract {
 
   getRegisteredAgents: TypedContractMethod<[], [string[]], "view">;
 
-  owner: TypedContractMethod<[], [string], "view">;
+  getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], "view">;
+
+  grantRole: TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  hasRole: TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [boolean],
+    "view"
+  >;
 
   registerAgent: TypedContractMethod<[], [void], "nonpayable">;
 
   registeredAgents: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
-  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
+  renounceRole: TypedContractMethod<
+    [role: BytesLike, callerConfirmation: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
   reputationNFT: TypedContractMethod<[], [string], "view">;
+
+  revokeRole: TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
   setWhitelisted: TypedContractMethod<
     [agent: AddressLike, status: boolean],
@@ -304,13 +448,19 @@ export interface AgentRegistry extends BaseContract {
     "nonpayable"
   >;
 
-  totalAgents: TypedContractMethod<[], [bigint], "view">;
-
-  transferOwnership: TypedContractMethod<
-    [newOwner: AddressLike],
+  slashAgent: TypedContractMethod<
+    [agent: AddressLike, points: BigNumberish],
     [void],
     "nonpayable"
   >;
+
+  supportsInterface: TypedContractMethod<
+    [interfaceId: BytesLike],
+    [boolean],
+    "view"
+  >;
+
+  totalAgents: TypedContractMethod<[], [bigint], "view">;
 
   updateCreditScore: TypedContractMethod<
     [agent: AddressLike, score: BigNumberish, easUID: string],
@@ -322,6 +472,12 @@ export interface AgentRegistry extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "DEFAULT_ADMIN_ROLE"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "MANAGER_ROLE"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "WHITELIST_THRESHOLD"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -351,8 +507,22 @@ export interface AgentRegistry extends BaseContract {
     nameOrSignature: "getRegisteredAgents"
   ): TypedContractMethod<[], [string[]], "view">;
   getFunction(
-    nameOrSignature: "owner"
-  ): TypedContractMethod<[], [string], "view">;
+    nameOrSignature: "getRoleAdmin"
+  ): TypedContractMethod<[role: BytesLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "grantRole"
+  ): TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "hasRole"
+  ): TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [boolean],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "registerAgent"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -360,11 +530,22 @@ export interface AgentRegistry extends BaseContract {
     nameOrSignature: "registeredAgents"
   ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
   getFunction(
-    nameOrSignature: "renounceOwnership"
-  ): TypedContractMethod<[], [void], "nonpayable">;
+    nameOrSignature: "renounceRole"
+  ): TypedContractMethod<
+    [role: BytesLike, callerConfirmation: AddressLike],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "reputationNFT"
   ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "revokeRole"
+  ): TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "setWhitelisted"
   ): TypedContractMethod<
@@ -373,11 +554,18 @@ export interface AgentRegistry extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "slashAgent"
+  ): TypedContractMethod<
+    [agent: AddressLike, points: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "supportsInterface"
+  ): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
+  getFunction(
     nameOrSignature: "totalAgents"
   ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "transferOwnership"
-  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "updateCreditScore"
   ): TypedContractMethod<
@@ -394,6 +582,13 @@ export interface AgentRegistry extends BaseContract {
     AgentRegisteredEvent.OutputObject
   >;
   getEvent(
+    key: "AgentSlashed"
+  ): TypedContractEvent<
+    AgentSlashedEvent.InputTuple,
+    AgentSlashedEvent.OutputTuple,
+    AgentSlashedEvent.OutputObject
+  >;
+  getEvent(
     key: "CreditScoreUpdated"
   ): TypedContractEvent<
     CreditScoreUpdatedEvent.InputTuple,
@@ -401,11 +596,25 @@ export interface AgentRegistry extends BaseContract {
     CreditScoreUpdatedEvent.OutputObject
   >;
   getEvent(
-    key: "OwnershipTransferred"
+    key: "RoleAdminChanged"
   ): TypedContractEvent<
-    OwnershipTransferredEvent.InputTuple,
-    OwnershipTransferredEvent.OutputTuple,
-    OwnershipTransferredEvent.OutputObject
+    RoleAdminChangedEvent.InputTuple,
+    RoleAdminChangedEvent.OutputTuple,
+    RoleAdminChangedEvent.OutputObject
+  >;
+  getEvent(
+    key: "RoleGranted"
+  ): TypedContractEvent<
+    RoleGrantedEvent.InputTuple,
+    RoleGrantedEvent.OutputTuple,
+    RoleGrantedEvent.OutputObject
+  >;
+  getEvent(
+    key: "RoleRevoked"
+  ): TypedContractEvent<
+    RoleRevokedEvent.InputTuple,
+    RoleRevokedEvent.OutputTuple,
+    RoleRevokedEvent.OutputObject
   >;
   getEvent(
     key: "WhitelistStatusChanged"
@@ -427,6 +636,17 @@ export interface AgentRegistry extends BaseContract {
       AgentRegisteredEvent.OutputObject
     >;
 
+    "AgentSlashed(address,uint256,uint256)": TypedContractEvent<
+      AgentSlashedEvent.InputTuple,
+      AgentSlashedEvent.OutputTuple,
+      AgentSlashedEvent.OutputObject
+    >;
+    AgentSlashed: TypedContractEvent<
+      AgentSlashedEvent.InputTuple,
+      AgentSlashedEvent.OutputTuple,
+      AgentSlashedEvent.OutputObject
+    >;
+
     "CreditScoreUpdated(address,uint256,string)": TypedContractEvent<
       CreditScoreUpdatedEvent.InputTuple,
       CreditScoreUpdatedEvent.OutputTuple,
@@ -438,15 +658,37 @@ export interface AgentRegistry extends BaseContract {
       CreditScoreUpdatedEvent.OutputObject
     >;
 
-    "OwnershipTransferred(address,address)": TypedContractEvent<
-      OwnershipTransferredEvent.InputTuple,
-      OwnershipTransferredEvent.OutputTuple,
-      OwnershipTransferredEvent.OutputObject
+    "RoleAdminChanged(bytes32,bytes32,bytes32)": TypedContractEvent<
+      RoleAdminChangedEvent.InputTuple,
+      RoleAdminChangedEvent.OutputTuple,
+      RoleAdminChangedEvent.OutputObject
     >;
-    OwnershipTransferred: TypedContractEvent<
-      OwnershipTransferredEvent.InputTuple,
-      OwnershipTransferredEvent.OutputTuple,
-      OwnershipTransferredEvent.OutputObject
+    RoleAdminChanged: TypedContractEvent<
+      RoleAdminChangedEvent.InputTuple,
+      RoleAdminChangedEvent.OutputTuple,
+      RoleAdminChangedEvent.OutputObject
+    >;
+
+    "RoleGranted(bytes32,address,address)": TypedContractEvent<
+      RoleGrantedEvent.InputTuple,
+      RoleGrantedEvent.OutputTuple,
+      RoleGrantedEvent.OutputObject
+    >;
+    RoleGranted: TypedContractEvent<
+      RoleGrantedEvent.InputTuple,
+      RoleGrantedEvent.OutputTuple,
+      RoleGrantedEvent.OutputObject
+    >;
+
+    "RoleRevoked(bytes32,address,address)": TypedContractEvent<
+      RoleRevokedEvent.InputTuple,
+      RoleRevokedEvent.OutputTuple,
+      RoleRevokedEvent.OutputObject
+    >;
+    RoleRevoked: TypedContractEvent<
+      RoleRevokedEvent.InputTuple,
+      RoleRevokedEvent.OutputTuple,
+      RoleRevokedEvent.OutputObject
     >;
 
     "WhitelistStatusChanged(address,bool)": TypedContractEvent<

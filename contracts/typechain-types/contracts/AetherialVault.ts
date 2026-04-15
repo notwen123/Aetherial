@@ -28,29 +28,35 @@ export interface AetherialVaultInterface extends Interface {
     nameOrSignature:
       | "AGENT_FEE_BPS"
       | "BPS_DENOMINATOR"
+      | "DEFAULT_ADMIN_ROLE"
+      | "MANAGER_ROLE"
       | "MAX_ALLOCATION_BPS"
+      | "MIN_PROFIT_BPS_TO_RESET"
       | "PROTOCOL_FEE_BPS"
       | "accRewardPerShare"
       | "activeAllocations"
       | "asset"
       | "claimYield"
+      | "consecutiveLosses"
       | "deposit"
-      | "lpAssetValue"
+      | "getRoleAdmin"
+      | "grantRole"
+      | "hasRole"
       | "lpShares"
-      | "owner"
       | "pendingYield"
       | "pendingYieldOf"
       | "protocolFeeAccrued"
       | "registry"
-      | "renounceOwnership"
+      | "renounceRole"
       | "requestLiquidity"
+      | "revokeRole"
       | "rewardDebt"
       | "setTreasury"
       | "settleLiquidity"
+      | "supportsInterface"
       | "totalAllocated"
       | "totalAssets"
       | "totalShares"
-      | "transferOwnership"
       | "treasury"
       | "withdraw"
       | "withdrawProtocolFees"
@@ -61,8 +67,10 @@ export interface AetherialVaultInterface extends Interface {
       | "Deposited"
       | "LiquidityAllocated"
       | "LiquiditySettled"
-      | "OwnershipTransferred"
       | "ProtocolFeeWithdrawn"
+      | "RoleAdminChanged"
+      | "RoleGranted"
+      | "RoleRevoked"
       | "Withdrawn"
       | "YieldClaimed"
   ): EventFragment;
@@ -76,7 +84,19 @@ export interface AetherialVaultInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "DEFAULT_ADMIN_ROLE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MANAGER_ROLE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "MAX_ALLOCATION_BPS",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MIN_PROFIT_BPS_TO_RESET",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -97,18 +117,29 @@ export interface AetherialVaultInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "consecutiveLosses",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "deposit",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "lpAssetValue",
-    values: [AddressLike]
+    functionFragment: "getRoleAdmin",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "grantRole",
+    values: [BytesLike, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "hasRole",
+    values: [BytesLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "lpShares",
     values: [AddressLike]
   ): string;
-  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "pendingYield",
     values: [AddressLike]
@@ -123,12 +154,16 @@ export interface AetherialVaultInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "registry", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "renounceOwnership",
-    values?: undefined
+    functionFragment: "renounceRole",
+    values: [BytesLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "requestLiquidity",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "revokeRole",
+    values: [BytesLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "rewardDebt",
@@ -143,6 +178,10 @@ export interface AetherialVaultInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "supportsInterface",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "totalAllocated",
     values?: undefined
   ): string;
@@ -153,10 +192,6 @@ export interface AetherialVaultInterface extends Interface {
   encodeFunctionData(
     functionFragment: "totalShares",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "transferOwnership",
-    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "treasury", values?: undefined): string;
   encodeFunctionData(
@@ -177,7 +212,19 @@ export interface AetherialVaultInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "DEFAULT_ADMIN_ROLE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "MANAGER_ROLE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "MAX_ALLOCATION_BPS",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "MIN_PROFIT_BPS_TO_RESET",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -194,13 +241,18 @@ export interface AetherialVaultInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "asset", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "claimYield", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "lpAssetValue",
+    functionFragment: "consecutiveLosses",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getRoleAdmin",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "lpShares", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "pendingYield",
     data: BytesLike
@@ -215,13 +267,14 @@ export interface AetherialVaultInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "registry", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "renounceOwnership",
+    functionFragment: "renounceRole",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "requestLiquidity",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "rewardDebt", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setTreasury",
@@ -229,6 +282,10 @@ export interface AetherialVaultInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "settleLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -241,10 +298,6 @@ export interface AetherialVaultInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "totalShares",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "treasury", data: BytesLike): Result;
@@ -290,26 +343,20 @@ export namespace LiquiditySettledEvent {
   export type InputTuple = [
     agent: AddressLike,
     repayment: BigNumberish,
-    profit: BigNumberish
+    profit: BigNumberish,
+    loss: BigNumberish
   ];
-  export type OutputTuple = [agent: string, repayment: bigint, profit: bigint];
+  export type OutputTuple = [
+    agent: string,
+    repayment: bigint,
+    profit: bigint,
+    loss: bigint
+  ];
   export interface OutputObject {
     agent: string;
     repayment: bigint;
     profit: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace OwnershipTransferredEvent {
-  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
-  export type OutputTuple = [previousOwner: string, newOwner: string];
-  export interface OutputObject {
-    previousOwner: string;
-    newOwner: string;
+    loss: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -323,6 +370,64 @@ export namespace ProtocolFeeWithdrawnEvent {
   export interface OutputObject {
     treasury: string;
     amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RoleAdminChangedEvent {
+  export type InputTuple = [
+    role: BytesLike,
+    previousAdminRole: BytesLike,
+    newAdminRole: BytesLike
+  ];
+  export type OutputTuple = [
+    role: string,
+    previousAdminRole: string,
+    newAdminRole: string
+  ];
+  export interface OutputObject {
+    role: string;
+    previousAdminRole: string;
+    newAdminRole: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RoleGrantedEvent {
+  export type InputTuple = [
+    role: BytesLike,
+    account: AddressLike,
+    sender: AddressLike
+  ];
+  export type OutputTuple = [role: string, account: string, sender: string];
+  export interface OutputObject {
+    role: string;
+    account: string;
+    sender: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RoleRevokedEvent {
+  export type InputTuple = [
+    role: BytesLike,
+    account: AddressLike,
+    sender: AddressLike
+  ];
+  export type OutputTuple = [role: string, account: string, sender: string];
+  export interface OutputObject {
+    role: string;
+    account: string;
+    sender: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -408,7 +513,13 @@ export interface AetherialVault extends BaseContract {
 
   BPS_DENOMINATOR: TypedContractMethod<[], [bigint], "view">;
 
+  DEFAULT_ADMIN_ROLE: TypedContractMethod<[], [string], "view">;
+
+  MANAGER_ROLE: TypedContractMethod<[], [string], "view">;
+
   MAX_ALLOCATION_BPS: TypedContractMethod<[], [bigint], "view">;
+
+  MIN_PROFIT_BPS_TO_RESET: TypedContractMethod<[], [bigint], "view">;
 
   PROTOCOL_FEE_BPS: TypedContractMethod<[], [bigint], "view">;
 
@@ -420,13 +531,25 @@ export interface AetherialVault extends BaseContract {
 
   claimYield: TypedContractMethod<[], [void], "nonpayable">;
 
+  consecutiveLosses: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+
   deposit: TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
 
-  lpAssetValue: TypedContractMethod<[lp: AddressLike], [bigint], "view">;
+  getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], "view">;
+
+  grantRole: TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  hasRole: TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [boolean],
+    "view"
+  >;
 
   lpShares: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
-
-  owner: TypedContractMethod<[], [string], "view">;
 
   pendingYield: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
@@ -436,10 +559,20 @@ export interface AetherialVault extends BaseContract {
 
   registry: TypedContractMethod<[], [string], "view">;
 
-  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
+  renounceRole: TypedContractMethod<
+    [role: BytesLike, callerConfirmation: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
   requestLiquidity: TypedContractMethod<
     [amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  revokeRole: TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -458,25 +591,21 @@ export interface AetherialVault extends BaseContract {
     "nonpayable"
   >;
 
+  supportsInterface: TypedContractMethod<
+    [interfaceId: BytesLike],
+    [boolean],
+    "view"
+  >;
+
   totalAllocated: TypedContractMethod<[], [bigint], "view">;
 
   totalAssets: TypedContractMethod<[], [bigint], "view">;
 
   totalShares: TypedContractMethod<[], [bigint], "view">;
 
-  transferOwnership: TypedContractMethod<
-    [newOwner: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-
   treasury: TypedContractMethod<[], [string], "view">;
 
-  withdraw: TypedContractMethod<
-    [shareAmount: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
+  withdraw: TypedContractMethod<[shares: BigNumberish], [void], "nonpayable">;
 
   withdrawProtocolFees: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -491,7 +620,16 @@ export interface AetherialVault extends BaseContract {
     nameOrSignature: "BPS_DENOMINATOR"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "DEFAULT_ADMIN_ROLE"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "MANAGER_ROLE"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "MAX_ALLOCATION_BPS"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MIN_PROFIT_BPS_TO_RESET"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "PROTOCOL_FEE_BPS"
@@ -509,17 +647,31 @@ export interface AetherialVault extends BaseContract {
     nameOrSignature: "claimYield"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "consecutiveLosses"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+  getFunction(
     nameOrSignature: "deposit"
   ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "lpAssetValue"
-  ): TypedContractMethod<[lp: AddressLike], [bigint], "view">;
+    nameOrSignature: "getRoleAdmin"
+  ): TypedContractMethod<[role: BytesLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "grantRole"
+  ): TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "hasRole"
+  ): TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [boolean],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "lpShares"
   ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "owner"
-  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "pendingYield"
   ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
@@ -533,11 +685,22 @@ export interface AetherialVault extends BaseContract {
     nameOrSignature: "registry"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "renounceOwnership"
-  ): TypedContractMethod<[], [void], "nonpayable">;
+    nameOrSignature: "renounceRole"
+  ): TypedContractMethod<
+    [role: BytesLike, callerConfirmation: AddressLike],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "requestLiquidity"
   ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "revokeRole"
+  ): TypedContractMethod<
+    [role: BytesLike, account: AddressLike],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "rewardDebt"
   ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
@@ -548,6 +711,9 @@ export interface AetherialVault extends BaseContract {
     nameOrSignature: "settleLiquidity"
   ): TypedContractMethod<[repaymentAmount: BigNumberish], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "supportsInterface"
+  ): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
+  getFunction(
     nameOrSignature: "totalAllocated"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
@@ -557,14 +723,11 @@ export interface AetherialVault extends BaseContract {
     nameOrSignature: "totalShares"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "transferOwnership"
-  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "treasury"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "withdraw"
-  ): TypedContractMethod<[shareAmount: BigNumberish], [void], "nonpayable">;
+  ): TypedContractMethod<[shares: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "withdrawProtocolFees"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -591,18 +754,32 @@ export interface AetherialVault extends BaseContract {
     LiquiditySettledEvent.OutputObject
   >;
   getEvent(
-    key: "OwnershipTransferred"
-  ): TypedContractEvent<
-    OwnershipTransferredEvent.InputTuple,
-    OwnershipTransferredEvent.OutputTuple,
-    OwnershipTransferredEvent.OutputObject
-  >;
-  getEvent(
     key: "ProtocolFeeWithdrawn"
   ): TypedContractEvent<
     ProtocolFeeWithdrawnEvent.InputTuple,
     ProtocolFeeWithdrawnEvent.OutputTuple,
     ProtocolFeeWithdrawnEvent.OutputObject
+  >;
+  getEvent(
+    key: "RoleAdminChanged"
+  ): TypedContractEvent<
+    RoleAdminChangedEvent.InputTuple,
+    RoleAdminChangedEvent.OutputTuple,
+    RoleAdminChangedEvent.OutputObject
+  >;
+  getEvent(
+    key: "RoleGranted"
+  ): TypedContractEvent<
+    RoleGrantedEvent.InputTuple,
+    RoleGrantedEvent.OutputTuple,
+    RoleGrantedEvent.OutputObject
+  >;
+  getEvent(
+    key: "RoleRevoked"
+  ): TypedContractEvent<
+    RoleRevokedEvent.InputTuple,
+    RoleRevokedEvent.OutputTuple,
+    RoleRevokedEvent.OutputObject
   >;
   getEvent(
     key: "Withdrawn"
@@ -642,7 +819,7 @@ export interface AetherialVault extends BaseContract {
       LiquidityAllocatedEvent.OutputObject
     >;
 
-    "LiquiditySettled(address,uint256,uint256)": TypedContractEvent<
+    "LiquiditySettled(address,uint256,uint256,uint256)": TypedContractEvent<
       LiquiditySettledEvent.InputTuple,
       LiquiditySettledEvent.OutputTuple,
       LiquiditySettledEvent.OutputObject
@@ -651,17 +828,6 @@ export interface AetherialVault extends BaseContract {
       LiquiditySettledEvent.InputTuple,
       LiquiditySettledEvent.OutputTuple,
       LiquiditySettledEvent.OutputObject
-    >;
-
-    "OwnershipTransferred(address,address)": TypedContractEvent<
-      OwnershipTransferredEvent.InputTuple,
-      OwnershipTransferredEvent.OutputTuple,
-      OwnershipTransferredEvent.OutputObject
-    >;
-    OwnershipTransferred: TypedContractEvent<
-      OwnershipTransferredEvent.InputTuple,
-      OwnershipTransferredEvent.OutputTuple,
-      OwnershipTransferredEvent.OutputObject
     >;
 
     "ProtocolFeeWithdrawn(address,uint256)": TypedContractEvent<
@@ -673,6 +839,39 @@ export interface AetherialVault extends BaseContract {
       ProtocolFeeWithdrawnEvent.InputTuple,
       ProtocolFeeWithdrawnEvent.OutputTuple,
       ProtocolFeeWithdrawnEvent.OutputObject
+    >;
+
+    "RoleAdminChanged(bytes32,bytes32,bytes32)": TypedContractEvent<
+      RoleAdminChangedEvent.InputTuple,
+      RoleAdminChangedEvent.OutputTuple,
+      RoleAdminChangedEvent.OutputObject
+    >;
+    RoleAdminChanged: TypedContractEvent<
+      RoleAdminChangedEvent.InputTuple,
+      RoleAdminChangedEvent.OutputTuple,
+      RoleAdminChangedEvent.OutputObject
+    >;
+
+    "RoleGranted(bytes32,address,address)": TypedContractEvent<
+      RoleGrantedEvent.InputTuple,
+      RoleGrantedEvent.OutputTuple,
+      RoleGrantedEvent.OutputObject
+    >;
+    RoleGranted: TypedContractEvent<
+      RoleGrantedEvent.InputTuple,
+      RoleGrantedEvent.OutputTuple,
+      RoleGrantedEvent.OutputObject
+    >;
+
+    "RoleRevoked(bytes32,address,address)": TypedContractEvent<
+      RoleRevokedEvent.InputTuple,
+      RoleRevokedEvent.OutputTuple,
+      RoleRevokedEvent.OutputObject
+    >;
+    RoleRevoked: TypedContractEvent<
+      RoleRevokedEvent.InputTuple,
+      RoleRevokedEvent.OutputTuple,
+      RoleRevokedEvent.OutputObject
     >;
 
     "Withdrawn(address,uint256,uint256)": TypedContractEvent<

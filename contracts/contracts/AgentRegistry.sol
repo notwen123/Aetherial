@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./ReputationNFT.sol";
 
 /**
@@ -10,12 +10,13 @@ import "./ReputationNFT.sol";
  *
  *  Flow:
  *   1. Agent calls registerAgent() → stored with score 0, not whitelisted.
- *   2. Off-chain CreditEvaluator calls updateCreditScore() with the real alpha score.
+ *   2. Manager calls updateCreditScore() with the real alpha score.
  *   3. If score >= WHITELIST_THRESHOLD the agent is auto-whitelisted.
  *   4. On first whitelist, a soulbound ReputationNFT is minted with the EAS UID.
- *   5. Owner can manually override whitelist status at any time.
  */
-contract AgentRegistry is Ownable {
+contract AgentRegistry is AccessControl {
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+    
     ReputationNFT public reputationNFT;
 
     /// Minimum credit score (0-1000) required for auto-whitelist
@@ -24,9 +25,9 @@ contract AgentRegistry is Ownable {
     struct Agent {
         bool isRegistered;
         uint256 creditScore;   // 0-1000
-        string easAttestationUID; // latest EAS attestation UID
+        string easAttestationUID; 
         bool isWhitelisted;
-        uint256 lastUpdated;   // block.timestamp of last score update
+        uint256 lastUpdated;
     }
 
     mapping(address => Agent) public agents;
@@ -35,8 +36,11 @@ contract AgentRegistry is Ownable {
     event AgentRegistered(address indexed agent);
     event CreditScoreUpdated(address indexed agent, uint256 newScore, string easUID);
     event WhitelistStatusChanged(address indexed agent, bool status);
+    event AgentSlashed(address indexed agent, uint256 slashPoints, uint256 newScore);
 
-    constructor(address _reputationNFT) Ownable(msg.sender) {
+    constructor(address _reputationNFT) {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MANAGER_ROLE, msg.sender);
         reputationNFT = ReputationNFT(_reputationNFT);
     }
 
@@ -57,17 +61,13 @@ contract AgentRegistry is Ownable {
     }
 
     /**
-     * @dev Called by the off-chain CreditEvaluator (owner) after computing alpha score.
-     *      Stores the EAS attestation UID, updates score, and auto-whitelists if threshold met.
-     * @param agent       The agent address being scored.
-     * @param score       Alpha score 0-1000.
-     * @param easUID      The EAS attestation UID anchoring this score on-chain.
+     * @dev Called by the off-chain manager after computing alpha score.
      */
     function updateCreditScore(
         address agent,
         uint256 score,
         string calldata easUID
-    ) external onlyOwner {
+    ) external onlyRole(MANAGER_ROLE) {
         require(agents[agent].isRegistered, "Agent not registered");
         require(score <= 1000, "Score out of range");
 
@@ -77,7 +77,27 @@ contract AgentRegistry is Ownable {
 
         emit CreditScoreUpdated(agent, score, easUID);
 
-        // Auto-whitelist / de-whitelist based on threshold
+        _updateWhitelistAndNFT(agent, score, easUID);
+    }
+
+    /**
+     * @dev Process protocol-level slashing for bad performance or losses.
+     */
+    function slashAgent(address agent, uint256 points) external onlyRole(MANAGER_ROLE) {
+        require(agents[agent].isRegistered, "Agent not registered");
+        
+        if (points > agents[agent].creditScore) {
+            agents[agent].creditScore = 0;
+        } else {
+            agents[agent].creditScore -= points;
+        }
+        
+        emit AgentSlashed(agent, points, agents[agent].creditScore);
+        
+        _updateWhitelistAndNFT(agent, agents[agent].creditScore, agents[agent].easAttestationUID);
+    }
+
+    function _updateWhitelistAndNFT(address agent, uint256 score, string memory easUID) internal {
         bool shouldWhitelist = score >= WHITELIST_THRESHOLD;
         if (agents[agent].isWhitelisted != shouldWhitelist) {
             agents[agent].isWhitelisted = shouldWhitelist;
@@ -93,9 +113,9 @@ contract AgentRegistry is Ownable {
     }
 
     /**
-     * @dev Manual override — owner can force whitelist status regardless of score.
+     * @dev Manual override — admin can force whitelist status regardless of score.
      */
-    function setWhitelisted(address agent, bool status) external onlyOwner {
+    function setWhitelisted(address agent, bool status) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(agents[agent].isRegistered, "Agent not registered");
         agents[agent].isWhitelisted = status;
         emit WhitelistStatusChanged(agent, status);

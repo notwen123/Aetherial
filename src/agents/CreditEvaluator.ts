@@ -43,6 +43,9 @@ const EAS_ABI = [
   },
 ] as const;
 
+// ── OKX base URL — use proxy if set (for geo-restricted servers) ─────────────
+const OKX_BASE = process.env.OKX_PROXY_URL ?? 'https://www.okx.com';
+
 // ── OKX API auth header builder ──────────────────────────────────────────────
 function buildOKXHeaders(method: string, path: string, body = '') {
   const timestamp = new Date().toISOString();
@@ -121,7 +124,7 @@ export class CreditEvaluator {
     // 1. Portfolio overview — win rate, realized/unrealized PnL
     const overviewPath = `${basePath}/portfolio-overview?address=${this.agentAddress}&chainIndex=196&timeFrame=7d`;
     const overviewRes = await axios.get(
-      `https://www.okx.com${overviewPath}`,
+      `${OKX_BASE}${overviewPath}`,
       { headers: buildOKXHeaders('GET', overviewPath) }
     );
 

@@ -18,6 +18,24 @@ export class AgentOrchestrator {
   }
 
   /**
+   * Persistent autonomous broker loop.
+   */
+  async start(intervalMs = 600000): Promise<void> {
+    console.log(`[Orchestrator] Starting persistent loop (Interval: ${intervalMs / 1000}s)`);
+    
+    while (true) {
+      try {
+        await this.runCycle();
+      } catch (err) {
+        console.error(`[Orchestrator] Cycle failed but loop continuing: ${(err as Error).message}`);
+      }
+      
+      console.log(`[Orchestrator] Sleeping for ${intervalMs / 1000}s...`);
+      await new Promise(r => setTimeout(r, intervalMs));
+    }
+  }
+
+  /**
    * Full autonomous prime broker cycle:
    * 
    *  1. REGISTER   — ensure agent is on-chain in AgentRegistry
@@ -34,31 +52,32 @@ export class AgentOrchestrator {
       logs.push(msg);
     };
 
-    log(`[Orchestrator] Starting cycle for agent: ${this.agentAddress}`);
+    log(`\n══════════════════════════════════════════════════`);
+    log(`[Orchestrator] Cycle Start: ${new Date().toISOString()}`);
+    log(`[Orchestrator] Agent: ${this.agentAddress}`);
 
     try {
       // ── 1. REGISTER ──────────────────────────────────────────────────────────
-      log('[1/5] Checking agent registration...');
+      log('[1/5] Checking Agent Registry status...');
       await this.vaultClient.ensureRegistered();
 
       // ── 2. AUDIT ─────────────────────────────────────────────────────────────
-      log('[2/5] Fetching real-time performance metrics...');
+      log('[2/5] Fetching production OKX alpha metrics...');
       const { score, metrics } = await this.evaluator.calculateAlpha();
       log(`[2/5] Alpha score computed: ${score}/1000 via ${metrics.provider}`);
 
       // ── 3. ATTEST ─────────────────────────────────────────────────────────────
-      log('[3/5] Anchoring reputation to EAS on X Layer Testnet...');
+      log('[3/5] Anchoring reputation to EAS on X Layer...');
       let easUID = '0x0000000000000000000000000000000000000000000000000000000000000000';
       try {
-        const attestHash = await this.evaluator.attestPerformance(
+        easUID = await this.evaluator.attestPerformance(
           score,
           deployments.eas.schemaUID,
           deployments.eas.address
         );
-        easUID = attestHash;
         log(`[3/5] EAS attestation anchored: ${easUID}`);
       } catch (err) {
-        log(`[3/5] EAS attestation failed (non-fatal): ${(err as Error).message}`);
+        log(`[3/5] EAS attestation skipped: ${(err as Error).message}`);
       }
 
       // ── 4. SCORE ──────────────────────────────────────────────────────────────
@@ -68,39 +87,38 @@ export class AgentOrchestrator {
       const minScore = parseInt(process.env.MIN_CREDIT_SCORE ?? '500', 10);
 
       if (score < minScore) {
-        log(`[5/5] Score ${score} < threshold ${minScore}. Liquidity denied.`);
+        log(`[5/5] Score ${score} < threshold ${minScore}. Access denied.`);
         return { status: 'INSUFFICIENT_ALPHA', score, easUID, logs };
       }
 
       // ── 5. EXECUTE ────────────────────────────────────────────────────────────
-      log(`[5/5] Score ${score} ≥ ${minScore}. Requesting vault liquidity...`);
+      log(`[5/5] Access Granted. Syncing with Vault...`);
 
       const state = await this.vaultClient.getVaultState();
       
-      // Handle existing allocation
       if (state.agentAllocation > 0n) {
-        log('      Agent has active allocation. Clearing previous position...');
+        log('      Clearing active previous cycle position...');
         await this._settlePosition(state.agentAllocation);
       }
 
       const requestAmount = process.env.MAX_LIQUIDITY_REQUEST ?? '1000';
-      const requestHash = await this.vaultClient.requestLiquidity(requestAmount);
-      log(`      Liquidity allocated. Tx: ${requestHash}`);
+      log(`      Requesting liquidity: $${requestAmount} AUSD`);
+      await this.vaultClient.requestLiquidity(requestAmount);
 
-      // ── 6. TRADE (The "Broker" Logic) ────────────────────────────────────────
-      log('      [Broker] Initiating AUSD Alpha Round-Trip...');
+      // ── 6. TRADE ─────────────────────────────────────────────────────────────
+      log('      [Broker] Initiating Security Scan & Real DEX Swap...');
       try {
         const swapResult = await this.swapper.executeRoundTrip(requestAmount);
-        log(`      [Broker] Profit Generated: $${swapResult.profitUsd.toFixed(4)}`);
-        log(`      [Broker] Settlement Hash: ${swapResult.txHash}`);
+        log(`      [Broker] Cycle Success | Profit: $${swapResult.profitUsd.toFixed(4)}`);
+        log(`      [Broker] Final TX: ${swapResult.txHash}`);
       } catch (err) {
-        log(`      [Broker] Trade cycle failed: ${(err as Error).message}`);
+        log(`      [Broker] Trade cycle error: ${(err as Error).message}`);
       }
 
       // ── 7. SETTLE ────────────────────────────────────────────────────────────
       const finalState = await this.vaultClient.getVaultState();
       if (finalState.agentAllocation > 0n) {
-        log('      Settling principal + performance back to vault...');
+        log('      Settling performance markers back to vault...');
         await this._settlePosition(finalState.agentAllocation);
       }
 
@@ -115,7 +133,7 @@ export class AgentOrchestrator {
 
   private async _settlePosition(allocation: bigint): Promise<void> {
     const repayment = formatEther(allocation);
+    // Vault will handle pro-rated loss points via its internal slasher
     await this.vaultClient.settleLiquidity(repayment);
   }
 }
-

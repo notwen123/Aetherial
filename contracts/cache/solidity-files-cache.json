@@ -2148,8 +2148,8 @@
       ]
     },
     "/home/bajrangi/Wins/Aetherial/contracts/contracts/AetherialVault.sol": {
-      "lastModificationDate": 1776130471431,
-      "contentHash": "cf482fe69ab167ae76a09fb0c06bcc60",
+      "lastModificationDate": 1776278883266,
+      "contentHash": "56a694b76b0f553a9c692ca69936436f",
       "sourceName": "contracts/AetherialVault.sol",
       "solcConfig": {
         "version": "0.8.28",
@@ -2178,7 +2178,7 @@
       "imports": [
         "@openzeppelin/contracts/token/ERC20/IERC20.sol",
         "@openzeppelin/contracts/utils/ReentrancyGuard.sol",
-        "@openzeppelin/contracts/access/Ownable.sol",
+        "@openzeppelin/contracts/access/AccessControl.sol",
         "./AgentRegistry.sol"
       ],
       "versionPragmas": [
@@ -2189,8 +2189,8 @@
       ]
     },
     "/home/bajrangi/Wins/Aetherial/contracts/contracts/AgentRegistry.sol": {
-      "lastModificationDate": 1776130425023,
-      "contentHash": "64f4b9a2cd37e8f9af77133e69e310f6",
+      "lastModificationDate": 1776275353914,
+      "contentHash": "6686eaf457fba8f46fb16ce4b4cdfe25",
       "sourceName": "contracts/AgentRegistry.sol",
       "solcConfig": {
         "version": "0.8.28",
@@ -2217,7 +2217,7 @@
         }
       },
       "imports": [
-        "@openzeppelin/contracts/access/Ownable.sol",
+        "@openzeppelin/contracts/access/AccessControl.sol",
         "./ReputationNFT.sol"
       ],
       "versionPragmas": [
@@ -2660,6 +2660,82 @@
       ],
       "artifacts": [
         "TestERC20Token"
+      ]
+    },
+    "/home/bajrangi/Wins/Aetherial/node_modules/@openzeppelin/contracts/access/AccessControl.sol": {
+      "lastModificationDate": 1776134151819,
+      "contentHash": "798a29e3c30dbd3eda1a67add26571e2",
+      "sourceName": "@openzeppelin/contracts/access/AccessControl.sol",
+      "solcConfig": {
+        "version": "0.8.28",
+        "settings": {
+          "evmVersion": "cancun",
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IAccessControl.sol",
+        "../utils/Context.sol",
+        "../utils/introspection/ERC165.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "AccessControl"
+      ]
+    },
+    "/home/bajrangi/Wins/Aetherial/node_modules/@openzeppelin/contracts/access/IAccessControl.sol": {
+      "lastModificationDate": 1776134153815,
+      "contentHash": "def1e8f7b6cac577cf2600655bf3bdf8",
+      "sourceName": "@openzeppelin/contracts/access/IAccessControl.sol",
+      "solcConfig": {
+        "version": "0.8.28",
+        "settings": {
+          "evmVersion": "cancun",
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.8.4"
+      ],
+      "artifacts": [
+        "IAccessControl"
       ]
     }
   }

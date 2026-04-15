@@ -10,11 +10,9 @@ import {
 import { privateKeyToAccount } from 'viem/accounts';
 import { xLayerTestnet } from './chain';
 
-// ── Token addresses on X Layer Testnet (chainIndex 196) ─────────────────────
 export const OKB_ADDRESS  = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 export const AUSD_ADDRESS = process.env.AUSD_TOKEN ?? '0xff7CceaEE80c63C11cd50Bf73260D3FA7B5Ab595';
 
-// ── OKX API auth ─────────────────────────────────────────────────────────────
 function buildOKXHeaders(method: string, path: string, body = '') {
   const timestamp = new Date().toISOString();
   const prehash  = `${timestamp}${method}${path}${body}`;
@@ -64,23 +62,42 @@ export class SwapExecutor {
   }
 
   /**
-   * Get a swap quote from OKX DEX API.
+   * Pre-trade token risk analysis.
    */
+  async checkTokenSecurity(tokenAddress: string, chainId = '196'): Promise<boolean> {
+    if (tokenAddress.toLowerCase() === OKB_ADDRESS.toLowerCase()) return true;
+
+    console.log(`[SwapExecutor] Scanning token security: ${tokenAddress}`);
+    try {
+      const path = `/api/v5/dex/market/token-scan?chainId=${chainId}&tokenAddress=${tokenAddress}`;
+      const res = await axios.get(`https://www.okx.com${path}`, {
+        headers: buildOKXHeaders('GET', path),
+      });
+
+      const riskData = res.data?.data?.[0];
+      if (!riskData) {
+        console.warn('[SwapExecutor] No security data found, proceeding with caution.');
+        return true;
+      }
+
+      if (riskData.isRiskToken) {
+        console.error(`[SwapExecutor] RISK DETECTED for token ${tokenAddress}. Aborting trade.`);
+        return false;
+      }
+
+      console.log(`[SwapExecutor] Token check passed: Buy Tax ${riskData.buyTaxes}%, Sell Tax ${riskData.sellTaxes}%`);
+      return true;
+    } catch (err) {
+      console.error(`[SwapExecutor] Security scan failed: ${(err as Error).message}`);
+      return true; // Fail-open for testnet, though production might block
+    }
+  }
+
   async getQuote(
     fromToken: string,
     toToken: string,
     readableAmount: string
   ): Promise<{ toAmount: string; priceImpact: string; gasUsd: string }> {
-    if (!process.env.OKX_PROJECT_ID) {
-      // Simulate a 0.2% fee + tiny slippage for the demo UI
-      const amt = parseFloat(readableAmount);
-      return {
-        toAmount: (amt * 0.998).toString(),
-        priceImpact: '0.02',
-        gasUsd: '0.12',
-      };
-    }
-
     const path = `/api/v5/dex/aggregator/quote?chainId=196&fromTokenAddress=${fromToken}&toTokenAddress=${toToken}&amount=${readableAmount}&slippage=0.5`;
     const res = await axios.get(`https://www.okx.com${path}`, {
       headers: buildOKXHeaders('GET', path),
@@ -96,22 +113,12 @@ export class SwapExecutor {
     };
   }
 
-  /**
-   * Execute a swap via OKX DEX API swap endpoint or simulated on-chain wait.
-   */
   async executeSwap(
     fromToken: string,
     toToken: string,
     readableAmount: string,
     slippage = '0.5'
   ): Promise<string> {
-    if (!process.env.OKX_PROJECT_ID) {
-      console.log(`[SwapExecutor] No Project ID. Simulating on-chain execution for ${readableAmount} tokens...`);
-      // Simulate delay of a real on-chain transaction
-      await new Promise(r => setTimeout(r, 2000));
-      return '0x' + crypto.randomBytes(32).toString('hex');
-    }
-
     const swapPath = `/api/v5/dex/aggregator/swap?chainId=196&fromTokenAddress=${fromToken}&toTokenAddress=${toToken}&amount=${readableAmount}&slippage=${slippage}&userWalletAddress=${this.walletAddress}`;
     const swapRes = await axios.get(`https://www.okx.com${swapPath}`, {
       headers: buildOKXHeaders('GET', swapPath),
@@ -136,13 +143,13 @@ export class SwapExecutor {
     return hash;
   }
 
-  /**
-   * Full round-trip strategy: AUSD → OKB → AUSD
-   */
   async executeRoundTrip(ausdAmount: string): Promise<SwapResult> {
     const MAX_PRICE_IMPACT = parseFloat(process.env.MAX_PRICE_IMPACT ?? '5.0');
-
     console.log(`[SwapExecutor] Starting round-trip: ${ausdAmount} AUSD → OKB → AUSD`);
+
+    // ── Pre-trade Security ───────────────────────────────────────────────────
+    const isSafe = await this.checkTokenSecurity(OKB_ADDRESS);
+    if (!isSafe) throw new Error('Security check failed for target token');
 
     console.log('[SwapExecutor] Leg 1: Getting AUSD → OKB quote...');
     const leg1Quote = await this.getQuote(AUSD_ADDRESS, OKB_ADDRESS, ausdAmount);
@@ -155,15 +162,9 @@ export class SwapExecutor {
     console.log('[SwapExecutor] Executing Leg 1: AUSD → OKB...');
     await this.executeSwap(AUSD_ADDRESS, OKB_ADDRESS, ausdAmount);
 
-    // Minor delay between legs
     await new Promise(r => setTimeout(r, 1000));
 
-    // Calculate leg 2 input based on Leg 1 output (toAmount)
-    // If quote returned 0 (simulated/fail), fallback to 99.5% of input
-    const leg2StartAmount = leg1Quote.toAmount !== '0' 
-      ? leg1Quote.toAmount 
-      : (parseFloat(ausdAmount) * 0.995).toString();
-
+    const leg2StartAmount = leg1Quote.toAmount;
     console.log(`[SwapExecutor] Leg 2: Getting OKB → AUSD quote...`);
     const leg2Quote = await this.getQuote(OKB_ADDRESS, AUSD_ADDRESS, leg2StartAmount);
     const priceImpact2 = parseFloat(leg2Quote.priceImpact);
@@ -184,4 +185,3 @@ export class SwapExecutor {
     };
   }
 }
-

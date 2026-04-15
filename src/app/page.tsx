@@ -41,7 +41,8 @@ function Preloader({ onComplete }: { onComplete: () => void }) {
           setTimeout(onComplete, 500);
           return 100;
         }
-        return prev + Math.floor(Math.random() * 5) + 2;
+        // No Math.random - per global rules
+        return prev + 4;
       });
     }, 50);
     return () => clearInterval(interval);
@@ -84,6 +85,7 @@ export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isLoaded, setIsLoaded] = React.useState(false);
+  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
 
   const { totalAssetsFormatted, totalAllocatedFormatted, utilization } = useVaultStats();
   const { totalAgents } = useAllAgents();
@@ -99,54 +101,44 @@ export default function LandingPage() {
     restDelta: 0.001
   });
 
+  const heroScale = useTransform(smoothProgress, [0, 0.2], [1, 1.2]);
+  const heroOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
+  const videoY = useTransform(smoothProgress, [0, 0.5], [0, 200]);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    setMousePos({
+      x: (clientX / innerWidth - 0.5) * 20,
+      y: (clientY / innerHeight - 0.5) * 20
+    });
+  };
+
   const handleLaunch = () => {
     if (!isConnected) {
       connect({ connector: injected() });
     } else {
-      router.push('/terminal');
+      router.push('/dashboard');
     }
   };
 
-  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
-
-  React.useEffect(() => {
-    if (!isLoading) {
-      const timer = setTimeout(() => setIsLoaded(true), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading]);
-
-  React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const { clientX, clientY } = e;
-      const x = (clientX / window.innerWidth - 0.5) * 40;
-      const y = (clientY / window.innerHeight - 0.5) * 40;
-      setMousePos({ x, y });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, []);
-
-  // Parallax transforms for Hero
-  const videoY = useTransform(smoothProgress, [0, 0.2], ["0%", "20%"]);
-  const heroOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
-  const heroScale = useTransform(smoothProgress, [0, 0.15], [1, 0.9]);
-
   return (
-    <main ref={containerRef} className="bg-black text-white selection:bg-primary/30 font-sans overflow-x-hidden">
+    <main 
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      className="relative min-h-screen bg-black text-white selection:bg-primary selection:text-black overflow-x-hidden"
+    >
       <AnimatePresence>
-        {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
+        {isLoading && <Preloader onComplete={() => { setIsLoading(false); setIsLoaded(true); }} />}
       </AnimatePresence>
 
       <ScrollSkew>
-        {/* Floating Navigation */}
+        {/* Cinematic Nav */}
         <motion.nav 
-          initial={{ y: -100, x: "-50%", opacity: 0 }}
-          animate={isLoaded ? { y: 0, x: "-50%", opacity: 1 } : { y: -100, x: "-50%", opacity: 0 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.8 }}
-          className="fixed top-6 left-1/2 z-[100] w-[calc(100%-3rem)] max-w-5xl"
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 1 }}
+          className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] w-full max-w-4xl px-4"
         >
           <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full px-8 h-16 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <div className="flex items-center gap-3 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
@@ -217,7 +209,7 @@ export default function LandingPage() {
                    </div>
                    <div className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.4em] flex items-center gap-3">
                      <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(163,230,53,0.5)]" /> 
-                     42 AGENTS ONLINE
+                     {totalAgents} AGENTS ONLINE
                    </div>
                 </div>
               </motion.div>
@@ -230,10 +222,10 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-16 text-left">
               {[
-                { label: 'ALLOCATED TVL', val: `$${totalAssetsFormatted}`, sub: '+12.4%' },
-                { label: 'CAPITAL DEPLOYED', val: `$${totalAllocatedFormatted}`, sub: 'REAL-TIME' },
+                { label: 'ALLOCATED TVL', val: `$${totalAssetsFormatted}`, sub: 'REAL-TIME' },
+                { label: 'CAPITAL DEPLOYED', val: `$${totalAllocatedFormatted}`, sub: 'ON-CHAIN' },
                 { label: 'ACTIVE CLUSTERS', val: totalAgents.toString(), sub: 'VERIFIED' },
-                { label: 'UTILIZATION', val: `${utilization}%`, sub: 'YTD' }
+                { label: 'UTILIZATION', val: `${utilization}%`, sub: 'EFFICIENCY' }
               ].map((stat, i) => (
                 <motion.div 
                   key={stat.label}
@@ -246,143 +238,33 @@ export default function LandingPage() {
                   <div className="text-[10px] font-mono text-zinc-600 uppercase font-bold tracking-[0.4em] group-hover:text-primary transition-colors">{stat.label}</div>
                   <div className="text-5xl font-black tracking-tighter text-white font-mono flex items-baseline gap-2">
                     {stat.val} 
-                    {stat.sub.includes('%') && <span className="text-primary text-xs tracking-normal align-top font-sans font-bold">{stat.sub}</span>}
                   </div>
+                  <div className="text-[8px] font-bold text-zinc-800 uppercase tracking-[0.3em]">{stat.sub}</div>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Section 3: The Core Engine (Sticky Reveal) */}
-        <section id="protocol" className="relative bg-black py-40">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid lg:grid-cols-2 gap-20 items-start">
-              <div className="lg:sticky lg:top-40 flex justify-center py-20 lg:order-last">
-                <motion.div
-                  style={{ 
-                    y: useTransform(smoothProgress, [0.1, 0.4], [0, -40]),
-                    scale: useTransform(smoothProgress, [0.1, 0.4], [0.95, 1.05]),
-                    rotateX: useTransform(smoothProgress, [0.1, 0.4], [10, -10]),
-                    rotateY: useTransform(smoothProgress, [0.1, 0.4], [-5, 5])
-                  }}
-                  className="relative w-full max-w-[500px] aspect-square"
-                >
-                  <motion.div
-                    animate={{ 
-                      y: [0, -15, 0],
-                      scale: [1, 1.02, 1]
-                    }}
-                    transition={{ 
-                      duration: 4, 
-                      repeat: Infinity, 
-                      ease: "easeInOut" 
-                    }}
-                    className="relative w-full h-full"
-                  >
-                    <Image 
-                      src="/processor.png" 
-                      alt="Aetherial Core" 
-                      fill 
-                      className="object-contain drop-shadow-[0_0_100px_rgba(163,230,53,0.15)] filter"
-                    />
-                    <motion.div 
-                      animate={{ opacity: [0, 0.4, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full"
-                    />
-                  </motion.div>
-                </motion.div>
+        {/* Section 3: Value Prop */}
+        <section className="relative z-20 py-64 bg-black overflow-hidden">
+           <div className="max-w-7xl mx-auto px-6 relative">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-32 gap-12">
+              <div className="space-y-8 max-w-2xl">
+                <div className="text-[10px] font-black text-primary uppercase tracking-[0.5em]">System Architecture</div>
+                <h2 className="text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] uppercase">
+                  Precision <span className="text-zinc-800">Meets</span> <br/>Autonomy.
+                </h2>
               </div>
-
-              <div className="flex flex-col gap-24 py-20 lg:order-first">
-                {/* Feature 1: Primary Focal Point */}
-                <motion.div 
-                  initial={{ opacity: 0, x: -50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ margin: "-10%" }}
-                  transition={{ duration: 1, ease: 'easeOut' }}
-                  className="space-y-6 text-left"
-                >
-                  <div className="inline-block px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[10px] font-mono font-bold text-primary tracking-[0.4em] uppercase">
-                    LIQUIDITY ARCHITECTURE
-                  </div>
-                  <h3 className="text-4xl md:text-6xl font-black tracking-tighter leading-none uppercase">Autonomous Yield Allocation.</h3>
-                  <p className="text-xl text-zinc-500 leading-[1.7] max-w-xl font-medium">Aetherial agents utilize TEE execution to manage liquidity across Uniswap V4 and Aave. Every rebalance is governed by strictly encoded profit-sharing mandates.</p>
-                  <div className="relative h-[400px] w-full flex items-center justify-center group">
-                    <Image 
-                      src="/3.png" 
-                      alt="Liquidity" 
-                      width={600}
-                      height={400}
-                      className="object-contain p-12 group-hover:scale-105 transition-transform duration-700"
-                    />
-                  </div>
-                </motion.div>
-
-                {/* Features 2 & 3: Horizontally Adjacent */}
-                <div className="grid md:grid-cols-2 gap-8">
-                  <motion.div 
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ margin: "-10%" }}
-                    transition={{ duration: 1, delay: 0.1 }}
-                    className="space-y-6 flex flex-col"
-                  >
-                    <div className="inline-block self-start px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
-                      TRUST PROTOCOL
-                    </div>
-                    <h4 className="text-2xl font-black tracking-tighter leading-tight uppercase">Reputation-as-a-Service.</h4>
-                    <div className="relative h-[250px] w-full flex items-center justify-center group">
-                      <Image 
-                        src="/2.png" 
-                        alt="Trust" 
-                        width={400}
-                        height={300}
-                        className="object-contain p-8 group-hover:scale-105 transition-transform duration-700"
-                      />
-                    </div>
-                  </motion.div>
-
-                  <motion.div 
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ margin: "-10%" }}
-                    transition={{ duration: 1, delay: 0.2 }}
-                    className="space-y-6 flex flex-col"
-                  >
-                    <div className="inline-block self-start px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
-                      NETWORK FINALITY
-                    </div>
-                    <h4 className="text-2xl font-black tracking-tighter leading-tight uppercase">Engineered on X Layer.</h4>
-                    <div className="relative h-[250px] w-full flex items-center justify-center group">
-                      <Image 
-                        src="/7.png" 
-                        alt="Finality" 
-                        width={400}
-                        height={300}
-                        className="object-contain p-20 group-hover:scale-110 transition-transform duration-700"
-                      />
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 4: Intelligence Grid (Bento) */}
-        <section id="ecosystem" className="py-56 bg-zinc-950/20">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex flex-col md:flex-row justify-between items-end gap-10 mb-32">
-              <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none uppercase">Frontier Logic.</h2>
-              <Link href="/docs" className="group flex items-center gap-3 text-[10px] font-mono font-bold text-primary uppercase tracking-[0.4em] bg-primary/10 px-8 py-4 rounded-full border border-primary/20 hover:bg-primary hover:text-black transition-all">
+              <Link 
+                href="/dashboard" 
+                className="group flex items-center gap-4 text-xs font-black uppercase tracking-[0.3em] border-b border-white/10 pb-2 hover:border-primary transition-colors"
+              >
                 Audit the Engine <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
             <div className="grid md:grid-cols-12 gap-8 items-stretch">
-              {/* Sidebar Feature */}
               <motion.div 
                 whileHover={{ y: -10, rotateX: 4, rotateY: 4 }}
                 style={{ transformStyle: 'preserve-3d' }}
@@ -397,7 +279,6 @@ export default function LandingPage() {
                  </div>
               </motion.div>
 
-              {/* Main Feature */}
               <motion.div 
                 whileHover={{ y: -10, rotateX: 2, rotateY: -2 }}
                 style={{ transformStyle: 'preserve-3d' }}
@@ -413,7 +294,6 @@ export default function LandingPage() {
                 </div>
               </motion.div>
 
-              {/* Second Row - All Horizontal */}
               <motion.div 
                 whileHover={{ y: -10, rotateX: 4, rotateY: -4 }}
                 style={{ transformStyle: 'preserve-3d' }}
