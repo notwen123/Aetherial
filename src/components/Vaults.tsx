@@ -6,7 +6,8 @@ import { useAetherial, useVaultStats } from '@/hooks/useAetherial';
 import { useAccount } from 'wagmi';
 import deployments from '../deployments.json';
 
-const EXPLORER = 'https://www.okx.com/explorer/xlayer/testnet/address/';
+const EXPLORER = 'https://www.oklink.com/xlayer-test/tx/';
+const ANALYSIS_LINK = 'https://web3.okx.com/portfolio/' + deployments.aetherial.vault + '/analysis';
 const isDeployed = deployments.aetherial.vault !== '';
 
 export function Vaults() {
@@ -17,6 +18,7 @@ export function Vaults() {
     ausdBalanceFormatted,
     deposit, withdraw, claimYield,
     isTxPending, refetchAll, isDeployed: hookDeployed,
+    assetSymbol, yieldSymbol,
   } = useAetherial();
 
   const { totalAssetsFormatted, availableFormatted, utilization } = useVaultStats();
@@ -29,7 +31,7 @@ export function Vaults() {
 
   const handleDeposit = async () => {
     if (!depositAmt || parseFloat(depositAmt) <= 0) return;
-    setMsg(`Approving & depositing ${depositAmt} AUSD...`, 'info');
+    setMsg(`Approving & depositing ${depositAmt} ${assetSymbol}...`, 'info');
     try {
       const tx = await deposit(depositAmt);
       setMsg(`Deposit confirmed. Tx: ${tx.slice(0, 10)}...`, 'ok');
@@ -80,20 +82,29 @@ export function Vaults() {
           <h2 className="text-xl font-semibold text-white tracking-tight">Strategy Vault</h2>
           <p className="text-sm text-zinc-400 mt-1">Live on-chain vault data from X Layer Testnet.</p>
         </div>
-        <a
-          href={`${EXPLORER}${deployments.aetherial.vault}`}
-          target="_blank" rel="noreferrer"
-          className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 hover:text-primary transition-colors uppercase tracking-widest"
-        >
-          View Contract <ArrowUpRight size={12} />
-        </a>
+        <div className="flex items-center gap-6">
+          <a
+            href={ANALYSIS_LINK}
+            target="_blank" rel="noreferrer"
+            className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 hover:text-primary transition-colors uppercase tracking-widest border border-white/5 px-4 py-2 rounded-full"
+          >
+            Institutional Analysis <ArrowUpRight size={12} />
+          </a>
+          <a
+            href={`https://www.oklink.com/xlayer-test/address/${deployments.aetherial.vault}`}
+            target="_blank" rel="noreferrer"
+            className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 hover:text-primary transition-colors uppercase tracking-widest"
+          >
+            View Contract <ArrowUpRight size={12} />
+          </a>
+        </div>
       </div>
 
       {/* Vault Global Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
-          { label: 'Total Assets', value: totalAssetsFormatted, unit: 'AUSD', icon: Vault },
-          { label: 'Idle Capital', value: availableFormatted, unit: 'AUSD', icon: Layers },
+          { label: 'Total Assets', value: totalAssetsFormatted, unit: assetSymbol, icon: Vault },
+          { label: 'Idle Capital', value: availableFormatted, unit: assetSymbol, icon: Layers },
           { label: 'Utilization', value: `${utilization}%`, unit: '', icon: TrendingUp },
         ].map(({ label, value, unit, icon: Icon }) => (
           <div key={label} className="bg-gradient-to-b from-[#0F0F0F] to-[#050505] border border-white/5 rounded-[32px] p-10 hover:border-white/10 transition-all group overflow-hidden relative">
@@ -120,15 +131,15 @@ export function Vaults() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
               <div className="text-[10px] text-zinc-600 uppercase tracking-[0.2em] font-black mb-3">Allocated Capital</div>
-              <div className="text-3xl font-bold text-white tracking-tighter">{lpAssetValueFormatted} <span className="text-xs text-zinc-600 ml-1">AUSD</span></div>
+              <div className="text-3xl font-bold text-white tracking-tighter">{lpAssetValueFormatted} <span className="text-xs text-zinc-600 ml-1">{assetSymbol}</span></div>
             </div>
             <div>
               <div className="text-[10px] text-zinc-600 uppercase tracking-[0.2em] font-black mb-3">Accrued Yield</div>
-              <div className="text-3xl font-bold text-primary tracking-tighter">{pendingYieldFormatted} <span className="text-xs text-primary/40 ml-1">AUSD</span></div>
+              <div className="text-3xl font-bold text-primary tracking-tighter">{pendingYieldFormatted} <span className="text-xs text-primary/40 ml-1">{assetSymbol}</span></div>
             </div>
             <div>
               <div className="text-[10px] text-zinc-600 uppercase tracking-[0.2em] font-black mb-3">Settlement Balance</div>
-              <div className="text-3xl font-bold text-zinc-300 tracking-tighter">{ausdBalanceFormatted} <span className="text-xs text-zinc-600 ml-1">AUSD</span></div>
+              <div className="text-3xl font-bold text-zinc-300 tracking-tighter">{ausdBalanceFormatted} <span className="text-xs text-zinc-600 ml-1">{assetSymbol}</span></div>
             </div>
           </div>
 

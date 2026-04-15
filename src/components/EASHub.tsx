@@ -6,8 +6,8 @@ import { usePublicClient } from 'wagmi';
 import { useAllAgents, useAgentData } from '@/hooks/useAetherial';
 import deployments from '../deployments.json';
 
-const EXPLORER_TX = 'https://www.okx.com/explorer/xlayer/testnet/tx/';
-const EXPLORER_ADDR = 'https://www.okx.com/explorer/xlayer/testnet/address/';
+const EXPLORER_TX = 'https://www.oklink.com/xlayer-test/tx/';
+const EXPLORER_ADDR = 'https://www.oklink.com/xlayer-test/address/';
 const isDeployed = deployments.aetherial.registry !== '';
 
 function timeAgo(ts: bigint): string {

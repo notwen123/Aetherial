@@ -34,6 +34,7 @@ export default function AetherialTerminal() {
   const {
     lpAssetValueFormatted, pendingYieldFormatted, ausdBalanceFormatted,
     deposit, withdraw, claimYield, isTxPending, refetchAll, isDeployed,
+    assetSymbol, yieldSymbol,
   } = useAetherial();
 
   const { totalAssetsFormatted, utilization } = useVaultStats();
@@ -50,14 +51,20 @@ export default function AetherialTerminal() {
     }
   }, [isConnected, isDeployed]);
 
+  const [lastTxHash, setLastTxHash] = useState<string | null>(null);
+  const [showTxPopup, setShowTxPopup] = useState(false);
+
   const handleDeposit = async () => {
     if (!depositAmt) return;
-    addLog(`Approving & depositing ${depositAmt} AUSD...`, 'info');
+    addLog(`Approving & depositing ${depositAmt} ${assetSymbol}...`, 'info');
     try {
       const tx = await deposit(depositAmt);
+      setLastTxHash(tx);
+      setShowTxPopup(true);
       addLog(`Deposit confirmed. Tx: ${tx.slice(0, 14)}...`, 'success');
       setDepositAmt('');
       setTimeout(refetchAll, 3000);
+      setTimeout(() => setShowTxPopup(false), 8000);
     } catch (e: any) {
       addLog(`Failed: ${e.shortMessage ?? e.message ?? 'Rejected'}`, 'err');
     }
@@ -68,9 +75,12 @@ export default function AetherialTerminal() {
     addLog(`Withdrawing ${withdrawAmt} shares...`, 'info');
     try {
       const tx = await withdraw(withdrawAmt);
+      setLastTxHash(tx);
+      setShowTxPopup(true);
       addLog(`Withdrawal confirmed. Tx: ${tx.slice(0, 14)}...`, 'success');
       setWithdrawAmt('');
       setTimeout(refetchAll, 3000);
+      setTimeout(() => setShowTxPopup(false), 8000);
     } catch (e: any) {
       addLog(`Failed: ${e.shortMessage ?? e.message ?? 'Rejected'}`, 'err');
     }
@@ -80,8 +90,11 @@ export default function AetherialTerminal() {
     addLog('Claiming yield...', 'info');
     try {
       const tx = await claimYield();
+      setLastTxHash(tx);
+      setShowTxPopup(true);
       addLog(`Yield claimed. Tx: ${tx.slice(0, 14)}...`, 'success');
       setTimeout(refetchAll, 3000);
+      setTimeout(() => setShowTxPopup(false), 8000);
     } catch (e: any) {
       addLog(`Failed: ${e.shortMessage ?? e.message ?? 'Rejected'}`, 'err');
     }
@@ -149,6 +162,36 @@ export default function AetherialTerminal() {
 
   return (
     <div className="min-h-screen bg-[#000000] text-zinc-400 font-sans selection:bg-primary/30 selection:text-primary">
+      {/* Transaction HUD Popup */}
+      {showTxPopup && (
+        <div className="fixed bottom-10 right-10 z-[100] animate-in fade-in slide-in-from-right-10 duration-500">
+          <div className="bg-[#0F0F0F] border border-primary/20 p-8 rounded-[32px] shadow-2xl backdrop-blur-3xl min-w-[320px] relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-full h-1 bg-primary/20 overflow-hidden">
+              <div className="h-full bg-primary animate-[progress_8s_linear]" />
+            </div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
+                  <Zap size={20} className="text-primary" />
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Transaction Anchored</h4>
+                  <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">X Layer Testnet Confirmation</p>
+                </div>
+              </div>
+              <button onClick={() => setShowTxPopup(false)} className="text-zinc-700 hover:text-white transition-colors">
+                <Lock size={14} />
+              </button>
+            </div>
+            <a 
+              href={`https://www.oklink.com/xlayer-test/tx/${lastTxHash}`}
+              target="_blank" rel="noreferrer"
+              className="flex items-center justify-center gap-3 w-full py-4 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-xl text-[10px] font-black text-primary uppercase tracking-[0.3em] transition-all group-hover:scale-[1.02]">
+              View on OKLink <ArrowUpRight size={14} />
+            </a>
+          </div>
+        </div>
+      )}
       {/* Navbar */}
       <nav className="h-16 border-b border-white/5 bg-black/80 backdrop-blur-2xl flex items-center justify-between px-10 sticky top-0 z-50">
         <div className="flex items-center gap-6">
@@ -205,10 +248,10 @@ export default function AetherialTerminal() {
                     </div>
                     <div className="text-5xl font-bold text-white tracking-tighter">
                       {lpAssetValueFormatted}
-                      <span className="text-sm font-bold text-zinc-600 ml-3">AUSD</span>
+                      <span className="text-sm font-bold text-zinc-600 ml-3">{assetSymbol}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-8 text-primary/80 text-[10px] font-bold uppercase tracking-[0.2em]">
-                      <TrendingUp size={12} /> {pendingYieldFormatted} Pending Rewards
+                      <TrendingUp size={12} /> {pendingYieldFormatted} {yieldSymbol} Accrued
                     </div>
                   </div>
 
@@ -251,14 +294,14 @@ export default function AetherialTerminal() {
                     </h3>
                     <div className="flex items-center gap-2 bg-black px-4 py-2 rounded-full border border-white/5">
                       <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Wallet</span>
-                      <span className="text-[11px] text-white font-mono font-bold">{ausdBalanceFormatted} AUSD</span>
+                      <span className="text-[11px] text-white font-mono font-bold">{ausdBalanceFormatted} {assetSymbol}</span>
                     </div>
                   </div>
 
                   <div className="p-10 space-y-10">
                     {/* Deposit */}
                     <div className="space-y-4">
-                      <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-[0.4em] ml-2">Supply AUSD</label>
+                      <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-[0.4em] ml-2">Supply {assetSymbol}</label>
                       <div className="relative group/input">
                         <input
                           type="number" value={depositAmt}
@@ -266,7 +309,7 @@ export default function AetherialTerminal() {
                           placeholder="0.00"
                           className="w-full bg-[#080808] border border-white/5 rounded-3xl py-8 px-10 text-4xl font-bold text-white placeholder:text-zinc-800 focus:outline-none focus:border-primary/40 transition-all shadow-inner"
                         />
-                        <span className="absolute right-10 top-1/2 -translate-y-1/2 text-sm font-black text-zinc-600 tracking-widest uppercase">AUSD</span>
+                        <span className="absolute right-10 top-1/2 -translate-y-1/2 text-sm font-black text-zinc-600 tracking-widest uppercase">{assetSymbol}</span>
                       </div>
                     </div>
 

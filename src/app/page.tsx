@@ -14,7 +14,8 @@ import {
 import { useAccount, useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { useRouter } from 'next/navigation';
-import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence, useVelocity } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, AnimatePresence, useVelocity } from 'framer-motion';
+import { useVaultStats, useAllAgents } from '@/hooks/useAetherial';
 
 function ScrollSkew({ children }: { children: React.ReactNode }) {
   const { scrollY } = useScroll();
@@ -83,6 +84,9 @@ export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isLoaded, setIsLoaded] = React.useState(false);
+
+  const { totalAssetsFormatted, totalAllocatedFormatted, utilization } = useVaultStats();
+  const { totalAgents } = useAllAgents();
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -224,12 +228,12 @@ export default function LandingPage() {
         {/* Section 2: Industrial Stats */}
         <section className="relative z-20 py-48 bg-black border-y border-zinc-900">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-16">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-16 text-left">
               {[
-                { label: 'ALLOCATED TVL', val: '$1.42B', sub: '+12.4%' },
-                { label: 'TRADES EXECUTED', val: '824,103', sub: 'REAL-TIME' },
-                { label: 'EAS ATTESTATIONS', val: '12,042', sub: 'VERIFIED' },
-                { label: 'PROTOCOL FEES', val: '$4.8M', sub: 'YTD' }
+                { label: 'ALLOCATED TVL', val: `$${totalAssetsFormatted}`, sub: '+12.4%' },
+                { label: 'CAPITAL DEPLOYED', val: `$${totalAllocatedFormatted}`, sub: 'REAL-TIME' },
+                { label: 'ACTIVE CLUSTERS', val: totalAgents.toString(), sub: 'VERIFIED' },
+                { label: 'UTILIZATION', val: `${utilization}%`, sub: 'YTD' }
               ].map((stat, i) => (
                 <motion.div 
                   key={stat.label}

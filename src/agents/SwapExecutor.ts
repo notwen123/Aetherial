@@ -59,7 +59,7 @@ export class SwapExecutor {
     this.client = createWalletClient({
       account,
       chain: xLayerTestnet,
-      transport: http(process.env.XLAYER_TESTNET_RPC ?? 'https://testrpc.xlayer.tech/terigon'),
+      transport: http(process.env.XLAYER_TESTNET_RPC ?? 'https://testrpc.xlayer.tech'),
     }).extend(publicActions);
   }
 
@@ -158,8 +158,11 @@ export class SwapExecutor {
     // Minor delay between legs
     await new Promise(r => setTimeout(r, 1000));
 
-    // Simulated leg 2 input (99% of original to account for fees/slippage)
-    const leg2StartAmount = (parseFloat(ausdAmount) * 0.995).toString();
+    // Calculate leg 2 input based on Leg 1 output (toAmount)
+    // If quote returned 0 (simulated/fail), fallback to 99.5% of input
+    const leg2StartAmount = leg1Quote.toAmount !== '0' 
+      ? leg1Quote.toAmount 
+      : (parseFloat(ausdAmount) * 0.995).toString();
 
     console.log(`[SwapExecutor] Leg 2: Getting OKB → AUSD quote...`);
     const leg2Quote = await this.getQuote(OKB_ADDRESS, AUSD_ADDRESS, leg2StartAmount);

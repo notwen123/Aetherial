@@ -122,7 +122,7 @@ async function main() {
   fs.writeFileSync(outPath, JSON.stringify(deployments, null, 2));
 
   // Also write a copy to the frontend for easy import
-  const frontendOut = path.join(__dirname, "..", "..", "frontend", "src", "deployments.json");
+  const frontendOut = path.join(__dirname, "..", "..", "src", "deployments.json");
   fs.writeFileSync(frontendOut, JSON.stringify(deployments, null, 2));
 
   console.log("\n══════════════════════════════════════════════════");

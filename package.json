@@ -14,7 +14,8 @@
     "start": "next start",
     "lint": "next lint",
     "contracts:compile": "npm run compile -w @aetherial/contracts",
-    "contracts:deploy": "npm run deploy -w @aetherial/contracts"
+    "contracts:deploy": "npm run deploy -w @aetherial/contracts",
+    "agents:dev": "ts-node src/agents/index.ts"
   },
   "dependencies": {
     "@studio-freight/lenis": "^1.0.42",

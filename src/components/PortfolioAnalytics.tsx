@@ -18,6 +18,7 @@ export function PortfolioAnalytics() {
     pendingYieldFormatted,
     ausdBalanceFormatted,
     lpShares,
+    assetSymbol, yieldSymbol,
   } = useAetherial();
 
   const {
@@ -72,8 +73,17 @@ export function PortfolioAnalytics() {
           <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Portfolio <span className="text-primary/60">Engine</span></h2>
           <p className="text-sm text-zinc-500 mt-2 font-medium">Real-time asset mirroring • Institutional analytics</p>
         </div>
-        <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs text-primary font-black tracking-[0.3em] uppercase">
-          LIVE TELEMETRY
+        <div className="flex items-center gap-6">
+          <a
+            href={`https://web3.okx.com/portfolio/${deployments.aetherial.vault}/analysis`}
+            target="_blank" rel="noreferrer"
+            className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] text-primary font-black tracking-[0.3em] uppercase hover:bg-primary/10 transition-all flex items-center gap-2"
+          >
+            Detailed Analysis <ArrowUpRight size={14} />
+          </a>
+          <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs text-primary/40 font-black tracking-[0.3em] uppercase">
+            LIVE TELEMETRY
+          </div>
         </div>
       </div>
 
@@ -138,7 +148,7 @@ export function PortfolioAnalytics() {
                     <div className="w-2.5 h-2.5 rounded-full border border-white/10" style={{ backgroundColor: color }} />
                     <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{label}</span>
                   </div>
-                  <span className="text-[11px] text-white font-black uppercase tracking-tight">{value} <span className="text-[8px] text-zinc-600 ml-0.5">AUSD</span></span>
+                  <span className="text-[11px] text-white font-black uppercase tracking-tight">{value} <span className="text-[8px] text-zinc-600 ml-0.5">{assetSymbol}</span></span>
                 </div>
               ))}
             </div>
@@ -176,7 +186,7 @@ export function PortfolioAnalytics() {
                 ].map(({ label, value, color }) => (
                   <div key={label}>
                     <div className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-black mb-3">{label}</div>
-                    <div className={`text-3xl font-black tracking-tighter ${color || 'text-white'}`}>{value} <span className={`text-[10px] uppercase ml-1 ${color ? 'opacity-40' : 'text-zinc-600'}`}>AUSD</span></div>
+                    <div className={`text-3xl font-black tracking-tighter ${color || 'text-white'}`}>{value} <span className={`text-[10px] uppercase ml-1 ${color ? 'opacity-40' : 'text-zinc-600'}`}>{assetSymbol}</span></div>
                   </div>
                 ))}
               </div>

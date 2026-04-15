@@ -142,6 +142,9 @@ export function useAetherial() {
     lpAssetValueFormatted: lpAssetValue ? parseFloat(formatEther(lpAssetValue as bigint)).toFixed(4) : '0.0000',
     pendingYieldFormatted: pendingYield ? parseFloat(formatEther(pendingYield as bigint)).toFixed(6) : '0.000000',
     ausdBalanceFormatted: ausdBalance ? parseFloat(formatEther(ausdBalance as bigint)).toFixed(2) : '0.00',
+    // renamed labels for UI consistency
+    assetSymbol: 'OKB',
+    yieldSymbol: 'OKB',
     // actions
     deposit, withdraw, claimYield,
     isTxPending,

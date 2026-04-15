@@ -94,7 +94,7 @@ export class CreditEvaluator {
     this.client = createWalletClient({
       account,
       chain: xLayerTestnet,
-      transport: http(process.env.XLAYER_TESTNET_RPC ?? 'https://testrpc.xlayer.tech/terigon'),
+      transport: http(process.env.XLAYER_TESTNET_RPC ?? 'https://testrpc.xlayer.tech'),
     }).extend(publicActions) as any;
   }
 

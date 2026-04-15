@@ -1,7 +1,8 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { AetherialVault, AgentRegistry, AetherialToken, ReputationNFT } from "../typechain-types";
+import { AetherialVault, AgentRegistry, AetherialToken, ReputationNFT } from "../typechain-types/contracts/contracts";
+import { EAS, SchemaRegistry } from "../typechain-types/contracts/contracts/eas";
 
 describe("Aetherial Protocol", function () {
   let vault: AetherialVault;

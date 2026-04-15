@@ -22,7 +22,7 @@ const REGISTRY_ABI = [
 ] as const;
 
 const REGISTRY_ADDRESS = deployments.aetherial.registry as `0x${string}`;
-const EXPLORER = 'https://www.okx.com/explorer/xlayer/testnet/tx/';
+const EXPLORER = 'https://www.oklink.com/xlayer-test/tx/';
 const isDeployed = !!(REGISTRY_ADDRESS && REGISTRY_ADDRESS.length > 4);
 
 // Single agent row — each fetches its own data

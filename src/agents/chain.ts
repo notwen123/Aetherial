@@ -5,10 +5,10 @@ export const xLayerTestnet = defineChain({
   name: 'X Layer Testnet',
   nativeCurrency: { name: 'OKB', symbol: 'OKB', decimals: 18 },
   rpcUrls: {
-    default: { http: [process.env.XLAYER_TESTNET_RPC ?? 'https://testrpc.xlayer.tech/terigon'] },
+    default: { http: [process.env.XLAYER_TESTNET_RPC ?? 'https://testrpc.xlayer.tech'] },
   },
   blockExplorers: {
-    default: { name: 'OKX Explorer', url: 'https://www.okx.com/web3/explorer/xlayer-test' },
+    default: { name: 'OKX OKLink', url: 'https://www.oklink.com/xlayer-test' },
   },
   testnet: true,
 });
