@@ -29,45 +29,50 @@ function AttestationRow({ address }: { address: `0x${string}` }) {
   const lastUpdated = agentInfo.lastUpdated;
 
   return (
-    <tr className="hover:bg-zinc-950/40 transition-colors group">
-      <td className="px-6 py-4">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-primary/5 border border-primary/20 rounded">
-            <FileCheck size={14} className="text-primary" />
+    <tr className="hover:bg-white/[0.03] transition-all group border-b border-white/[0.03]">
+      <td className="px-8 py-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/5 border border-primary/20 rounded-xl">
+            <FileCheck size={16} className="text-primary" />
           </div>
-          <span className="text-sm font-medium text-white">Credit Score Update</span>
+          <span className="text-[11px] font-black text-white uppercase tracking-widest">Score Update</span>
         </div>
       </td>
-      <td className="px-6 py-4">
-        <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-500 group-hover:text-primary transition-colors">
+      <td className="px-8 py-6">
+        <div className="flex items-center gap-2 text-[11px] font-mono font-bold text-zinc-500 group-hover:text-white transition-colors">
           {shortUID}
           {easUID && easUID.startsWith('0x') && (
             <a href={`${EXPLORER_TX}${easUID}`} target="_blank" rel="noreferrer">
-              <ExternalLink size={10} className="text-zinc-600 hover:text-primary" />
+              <ExternalLink size={12} className="text-zinc-700 hover:text-primary transition-colors" />
             </a>
           )}
         </div>
       </td>
-      <td className="px-6 py-4">
+      <td className="px-8 py-6">
         <a href={`${EXPLORER_ADDR}${address}`} target="_blank" rel="noreferrer"
-          className="text-xs text-zinc-400 font-mono hover:text-primary transition-colors">
+          className="text-[11px] text-zinc-500 font-mono font-bold hover:text-primary transition-colors">
           {shortAddr}
         </a>
       </td>
-      <td className="px-6 py-4">
-        <span className="text-xs text-zinc-600 italic">
-          Score: {creditScore}/1000 | {isWhitelisted ? 'Whitelisted' : 'Pending'}
-        </span>
-      </td>
-      <td className="px-6 py-4">
-        <div className="flex items-center gap-1.5 text-xs text-primary font-bold bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10 w-fit">
-          <CheckCircle2 size={12} /> Confirmed
+      <td className="px-8 py-6">
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] text-white font-black uppercase tracking-tight">
+            Score: {creditScore} / 1000
+          </span>
+          <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
+            {isWhitelisted ? 'Whitelisted' : 'Restricted'}
+          </span>
         </div>
       </td>
-      <td className="px-6 py-4 text-right">
-        <div className="flex items-center justify-end gap-1.5 text-[10px] text-zinc-500 font-bold">
-          <Clock size={10} />
-          {lastUpdated > 0n ? timeAgo(lastUpdated) : '—'}
+      <td className="px-8 py-6">
+        <div className="flex items-center gap-2 text-[10px] text-primary font-black uppercase tracking-[0.2em] bg-primary/5 px-4 py-1.5 rounded-full border border-primary/10 w-fit">
+          <CheckCircle2 size={12} strokeWidth={3} /> Verified
+        </div>
+      </td>
+      <td className="px-8 py-6 text-right">
+        <div className="flex items-center justify-end gap-2 text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+          <Clock size={12} />
+          {lastUpdated > BigInt(0) ? timeAgo(lastUpdated) : '—'}
         </div>
       </td>
     </tr>
@@ -92,35 +97,33 @@ export function EASHub() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center justify-between bg-white/[0.01] p-10 rounded-[32px] border border-white/5">
         <div>
-          <h2 className="text-xl font-semibold text-white tracking-tight">EAS Transparency Hub</h2>
-          <p className="text-sm text-zinc-400 mt-1">
-            Live attestations from AgentRegistry on X Layer Testnet • {totalAgents} records
-          </p>
+          <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Governance <span className="text-primary/60">Transparency</span></h2>
+          <p className="text-sm text-zinc-500 mt-2 font-medium">Immutable audit trail • OKX X Layer Settlement</p>
         </div>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={14} />
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
           <input
             type="text" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Filter by address..."
-            className="pl-9 pr-4 py-1.5 bg-zinc-950 border border-zinc-900 rounded text-xs text-white placeholder:text-zinc-700 focus:outline-none focus:border-primary/50 w-56 transition-all"
+            placeholder="Search Records..."
+            className="pl-14 pr-8 py-4 bg-black border border-white/5 rounded-2xl text-[11px] font-black text-white placeholder:text-zinc-800 focus:outline-none focus:border-primary/40 w-80 transition-all uppercase tracking-widest shadow-inner"
           />
         </div>
       </div>
 
-      <div className="bg-zinc-950/30 border border-zinc-900 rounded-xl overflow-hidden shadow-2xl">
+      <div className="bg-gradient-to-b from-[#0F0F0F] to-[#050505] border border-white/5 rounded-[40px] overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-black border-b border-zinc-900">
-                {['Type', 'EAS UID / Tx', 'Agent', 'Payload', 'Status', 'Age'].map((h, i) => (
-                  <th key={h} className={`px-6 py-4 text-[10px] font-bold text-zinc-600 uppercase tracking-widest ${i === 5 ? 'text-right' : ''}`}>{h}</th>
+              <tr className="bg-white/[0.02] border-b border-white/5">
+                {['Event', 'EAS Identifier', 'Agent Identity', 'Allocation Payload', 'Status', 'Timestamp'].map((h, i) => (
+                  <th key={h} className={`px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] ${i === 5 ? 'text-right' : ''}`}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-900/40">
+            <tbody className="divide-y divide-white/[0.02]">
               {isLoading ? (
                 <tr><td colSpan={6} className="px-6 py-12 text-center text-zinc-700">
                   <div className="flex items-center justify-center gap-3">
@@ -139,22 +142,22 @@ export function EASHub() {
           </table>
         </div>
 
-        <div className="px-6 py-5 bg-black border-t border-zinc-900 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/20">
-              <Lock size={14} className="text-primary" />
+        <div className="px-10 py-8 bg-white/[0.01] border-t border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/20">
+              <Lock size={20} className="text-primary" />
             </div>
             <div>
-              <p className="text-xs font-bold text-white">Trustless Infrastructure Verified</p>
-              <p className="text-[10px] text-zinc-600">All agent scores are anchored to OKX X Layer via EAS.</p>
+              <p className="text-xs font-black text-white uppercase tracking-widest">Trustless Audit Trail Active</p>
+              <p className="text-[11px] text-zinc-600 font-medium">Reputation data secured via Ethereum Attestation Service.</p>
             </div>
           </div>
           <a
             href={`${EXPLORER_ADDR}${deployments.eas.address}`}
             target="_blank" rel="noreferrer"
-            className="px-4 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded text-[10px] font-bold transition-all border border-zinc-900 flex items-center gap-1.5"
+            className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black transition-all border border-white/5 flex items-center gap-3 uppercase tracking-widest"
           >
-            View EAS Contract <ExternalLink size={10} />
+            EAS Protocol <ExternalLink size={12} />
           </a>
         </div>
       </div>

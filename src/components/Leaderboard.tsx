@@ -47,13 +47,13 @@ function AgentRow({ address, rank }: { address: `0x${string}`; rank: number }) {
   ];
 
   return (
-    <div className="group relative bg-zinc-950/50 border border-zinc-900 hover:border-primary/20 rounded-lg p-5 transition-all duration-300 hover:bg-zinc-950 overflow-hidden">
-      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-        <Trophy size={80} strokeWidth={1} className="text-primary" />
+    <div className="group relative bg-gradient-to-b from-[#0F0F0F] to-[#050505] border border-white/5 hover:border-white/20 rounded-[28px] p-8 transition-all duration-500 shadow-2xl overflow-hidden">
+      <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-1000">
+        <Trophy size={120} strokeWidth={1} className="text-primary" />
       </div>
-      <div className="flex items-center gap-6 relative z-10">
+      <div className="flex items-center gap-8 relative z-10">
         {/* Rank */}
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-black border border-zinc-900 text-sm font-bold text-white italic flex-shrink-0">
+        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-black border border-white/5 text-sm font-black text-white flex-shrink-0 group-hover:border-primary/20 transition-colors">
           #{rank}
         </div>
 
@@ -74,17 +74,17 @@ function AgentRow({ address, rank }: { address: `0x${string}`; rank: number }) {
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-2 gap-8 px-8 border-x border-zinc-900/50 flex-shrink-0">
+        <div className="grid grid-cols-2 gap-12 px-12 border-x border-white/[0.03] flex-shrink-0">
           <div>
-            <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold flex items-center gap-1">
-              <Target size={10} /> Credit Score
+            <div className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-black flex items-center gap-2">
+              <Target size={12} /> Efficiency
             </div>
-            <div className="text-xl font-bold text-white mt-0.5 font-mono">{score}</div>
+            <div className="text-2xl font-bold text-white mt-2 tracking-tighter">{score}</div>
           </div>
           <div>
-            <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Status</div>
-            <div className={`text-sm font-bold mt-0.5 ${isWhitelisted ? 'text-primary' : 'text-zinc-600'}`}>
-              {isWhitelisted ? 'Active' : 'Pending'}
+            <div className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-black">Standing</div>
+            <div className={`text-[10px] font-black uppercase tracking-widest mt-2 px-3 py-1 bg-white/5 rounded-full inline-block ${isWhitelisted ? 'text-primary' : 'text-zinc-600'}`}>
+              {isWhitelisted ? 'Whitelisted' : 'Pending'}
             </div>
           </div>
         </div>
@@ -124,16 +124,16 @@ export function Leaderboard() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center justify-between bg-white/[0.01] p-10 rounded-[32px] border border-white/5">
         <div>
-          <h2 className="text-xl font-semibold text-white tracking-tight">Agent Intelligence Leaderboard</h2>
-          <p className="text-sm text-zinc-400 mt-1">
-            Live on-chain data from AgentRegistry • {totalAgents} agent{totalAgents !== 1 ? 's' : ''} registered
+          <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Intelligence <span className="text-primary/60">Alpha</span></h2>
+          <p className="text-sm text-zinc-500 mt-2 font-medium">
+            Institutional performance tracking • Verified by EAS Attestations
           </p>
         </div>
-        <div className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-xs text-emerald-400 font-bold font-mono">
-          {totalAgents} AGENTS
+        <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs text-primary font-black tracking-[0.3em] uppercase">
+          {totalAgents} ACTIVE AGENTS
         </div>
       </div>
 
