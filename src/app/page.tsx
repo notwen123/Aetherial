@@ -291,51 +291,77 @@ export default function LandingPage() {
                 </motion.div>
               </div>
 
-              <div className="space-y-40 py-20 lg:order-first">
-                {[
-                  { 
-                    tag: 'LIQUIDITY ARCHITECTURE',
-                    title: 'Autonomous Yield Allocation.',
-                    desc: 'Aetherial agents utilize TEE execution to manage liquidity across Uniswap V4 and Aave. Every rebalance is governed by strictly encoded profit-sharing mandates without human intermediaries.',
-                    img: '/3.png'
-                  },
-                  { 
-                    tag: 'TRUST PROTOCOL',
-                    title: 'Reputation-as-a-Service.',
-                    desc: 'Every trade is anchored to the Ethereum Attestation Service (EAS). High-scoring agents mint dynamic "Reputation NFTs" that grant access to institutional-grade capital vaults.',
-                    img: '/2.png'
-                  },
-                  { 
-                    tag: 'NETWORK FINALITY',
-                    title: 'Engineered on X Layer.',
-                    desc: 'Sub-second finality meets sub-cent gas costs. Optimized for high-frequency prime brokerage operations during periods of extreme market volatility.',
-                    img: '/9.png'
-                  }
-                ].map((feature, i) => (
+              <div className="flex flex-col gap-24 py-20 lg:order-first">
+                {/* Feature 1: Primary Focal Point */}
+                <motion.div 
+                  initial={{ opacity: 0, x: -50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ margin: "-10%" }}
+                  transition={{ duration: 1, ease: 'easeOut' }}
+                  className="space-y-6 text-left"
+                >
+                  <div className="inline-block px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
+                    LIQUIDITY ARCHITECTURE
+                  </div>
+                  <h3 className="text-4xl md:text-6xl font-black tracking-tighter italic leading-none uppercase">Autonomous Yield Allocation.</h3>
+                  <p className="text-lg text-zinc-500 leading-relaxed max-w-xl font-bold">Aetherial agents utilize TEE execution to manage liquidity across Uniswap V4 and Aave. Every rebalance is governed by strictly encoded profit-sharing mandates.</p>
+                  <div className="relative h-[400px] w-full flex items-center justify-center group">
+                    <Image 
+                      src="/3.png" 
+                      alt="Liquidity" 
+                      width={600}
+                      height={400}
+                      className="object-contain p-12 group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Features 2 & 3: Horizontally Adjacent */}
+                <div className="grid md:grid-cols-2 gap-8">
                   <motion.div 
-                    key={feature.title}
-                    initial={{ opacity: 0, x: -50 }}
-                    whileInView={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ margin: "-10%" }}
-                    transition={{ duration: 1, ease: 'easeOut' }}
-                    className="space-y-6 text-left"
+                    transition={{ duration: 1, delay: 0.1 }}
+                    className="space-y-6 flex flex-col"
                   >
-                    <div className="inline-block px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
-                      {feature.tag}
+                    <div className="inline-block self-start px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
+                      TRUST PROTOCOL
                     </div>
-                    <h3 className="text-4xl md:text-6xl font-black tracking-tighter italic leading-none uppercase">{feature.title}</h3>
-                    <p className="text-lg text-zinc-500 leading-relaxed max-w-xl font-bold">{feature.desc}</p>
-                    <div className="relative h-[300px] w-full rounded-[48px] overflow-hidden border border-zinc-900 bg-zinc-950/50 flex items-center justify-center group">
+                    <h4 className="text-2xl font-black tracking-tighter italic leading-tight uppercase">Reputation-as-a-Service.</h4>
+                    <div className="relative h-[250px] w-full flex items-center justify-center group">
                       <Image 
-                        src={feature.img} 
-                        alt={feature.title} 
-                        width={600}
-                        height={400}
-                        className="object-contain p-12 group-hover:scale-105 transition-transform duration-700"
+                        src="/2.png" 
+                        alt="Trust" 
+                        width={400}
+                        height={300}
+                        className="object-contain p-8 group-hover:scale-105 transition-transform duration-700"
                       />
                     </div>
                   </motion.div>
-                ))}
+
+                  <motion.div 
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ margin: "-10%" }}
+                    transition={{ duration: 1, delay: 0.2 }}
+                    className="space-y-6 flex flex-col"
+                  >
+                    <div className="inline-block self-start px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-[9px] font-black text-primary tracking-[0.3em] uppercase">
+                      NETWORK FINALITY
+                    </div>
+                    <h4 className="text-2xl font-black tracking-tighter italic leading-tight uppercase">Engineered on X Layer.</h4>
+                    <div className="relative h-[250px] w-full flex items-center justify-center group">
+                      <Image 
+                        src="/7.png" 
+                        alt="Finality" 
+                        width={400}
+                        height={300}
+                        className="object-contain p-20 group-hover:scale-110 transition-transform duration-700"
+                      />
+                    </div>
+                  </motion.div>
+                </div>
               </div>
             </div>
           </div>
@@ -351,12 +377,12 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="grid md:grid-cols-12 gap-6 h-[800px]">
+            <div className="grid md:grid-cols-12 gap-6 items-stretch">
               {/* Sidebar Feature */}
               <motion.div 
                 whileHover={{ y: -10, rotateX: 4, rotateY: 4 }}
                 style={{ transformStyle: 'preserve-3d' }}
-                className="md:col-span-4 bg-zinc-950 border border-zinc-900 rounded-[48px] p-8 relative overflow-hidden flex flex-col justify-center group cursor-default"
+                className="md:col-span-4 bg-zinc-950 border border-zinc-900 rounded-[48px] p-8 relative overflow-hidden flex flex-col justify-center group cursor-default min-h-[350px]"
               >
                  <div className="absolute inset-0 opacity-10 group-hover:scale-110 transition-transform duration-1000">
                    <Image src="/5.png" alt="UI" fill className="object-cover" />
@@ -371,31 +397,32 @@ export default function LandingPage() {
               <motion.div 
                 whileHover={{ y: -10, rotateX: 2, rotateY: -2 }}
                 style={{ transformStyle: 'preserve-3d' }}
-                className="md:col-span-8 bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 relative overflow-hidden flex flex-col justify-end group cursor-default"
+                className="md:col-span-8 bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 relative overflow-hidden flex flex-col justify-end group cursor-default min-h-[350px]"
               >
                 <div className="absolute top-0 right-0 p-12 opacity-20 pointer-events-none group-hover:scale-105 transition-transform duration-1000">
                   <Image src="/4.png" alt="UI" width={400} height={400} className="object-contain" />
                 </div>
                 <div className="relative z-10 space-y-4">
                   <Shield className="text-primary mb-4" size={40} />
-                  <h3 className="text-4xl font-black tracking-tight uppercase italic">EAS Infrastructure.</h3>
+                  <h3 className="text-4xl font-black tracking-tight uppercase italic underline decoration-primary/20 underline-offset-8">EAS Infrastructure.</h3>
                   <p className="text-zinc-500 max-w-md font-bold text-sm tracking-wide">The most secure on-chain verification layer for autonomous entities, integrated natively into the Aetherial dashboard.</p>
                 </div>
               </motion.div>
+
+              {/* Second Row - All Horizontal */}
               <motion.div 
                 whileHover={{ y: -10, rotateX: 4, rotateY: -4 }}
                 style={{ transformStyle: 'preserve-3d' }}
-                className="bg-primary/5 border border-primary/10 rounded-[48px] p-10 flex flex-col justify-center gap-4 group cursor-default"
+                className="md:col-span-4 bg-primary/5 border border-primary/10 rounded-[48px] p-10 flex flex-col justify-center gap-4 group cursor-default min-h-[350px]"
               >
                  <div className="text-4xl font-bold text-primary italic font-mono tracking-tighter shadow-primary/20 drop-shadow-2xl">1.2ms</div>
                  <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest leading-relaxed">Execution latency on high-frequency vault rebalancing.</p>
               </motion.div>
-              
-              {/* Bottom Row */}
+
               <motion.div 
                 whileHover={{ y: -10, rotateX: -2, rotateY: 2 }}
                 style={{ transformStyle: 'preserve-3d' }}
-                className="md:col-span-5 bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 relative overflow-hidden group cursor-default"
+                className="md:col-span-4 bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 relative overflow-hidden group cursor-default min-h-[350px]"
               >
                  <div className="absolute bottom-[-10%] right-[-10%] w-1/2 opacity-20 group-hover:rotate-12 transition-transform duration-700">
                    <Image src="/6.png" alt="UI" width={300} height={300} />
@@ -407,14 +434,14 @@ export default function LandingPage() {
               <motion.div 
                 whileHover={{ y: -10, rotateX: -2, rotateY: -2 }}
                 style={{ transformStyle: 'preserve-3d' }}
-                className="md:col-span-7 bg-[#A3E635] text-black rounded-[48px] p-12 relative overflow-hidden group cursor-pointer shadow-[0_0_50px_rgba(163,230,53,0)] hover:shadow-[0_0_50px_rgba(163,230,53,0.3)] transition-shadow duration-500"
+                className="md:col-span-4 bg-[#A3E635] text-black rounded-[48px] p-12 relative overflow-hidden group cursor-pointer shadow-[0_0_50px_rgba(163,230,53,0)] hover:shadow-[0_0_50px_rgba(163,230,53,0.3)] transition-shadow duration-500 min-h-[350px]"
                 onClick={handleLaunch}
               >
                 <div className="absolute top-[-20%] right-[-10%] w-2/3 opacity-30 grayscale contrast-200 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
                   <Image src="/8.png" alt="UI" width={500} height={500} />
                 </div>
                 <div className="relative z-10 h-full flex flex-col justify-between">
-                  <h3 className="text-4xl md:text-5xl font-black italic tracking-tighter leading-none">INITIALIZE <br/>THE FLEET.</h3>
+                  <h3 className="text-4xl font-black italic tracking-tighter leading-none">INITIALIZE <br/>THE FLEET.</h3>
                   <div className="flex items-center gap-2 font-black uppercase text-[10px] tracking-widest">
                     ACCESS TERMINAL <ArrowRight size={16} />
                   </div>
