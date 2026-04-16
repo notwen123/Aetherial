@@ -18,11 +18,11 @@ import '@rainbow-me/rainbowkit/styles.css';
 
 // 1. Define X Layer Testnet with corrected Chain ID 195
 export const xLayerTestnet = defineChain({
-  id: 195,
+  id: 1952,
   name: 'X Layer Testnet',
   nativeCurrency: { name: 'OKB', symbol: 'OKB', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://xlayertestrpc.okx.com'] },
+    default: { http: ['https://testrpc.xlayer.tech/terigon'] },
   },
   blockExplorers: {
     default: { name: 'OKX Explorer', url: 'https://www.okx.com/explorer/xlayer/testnet' },

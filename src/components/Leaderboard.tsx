@@ -1,9 +1,10 @@
 "use client";
 
 import React from 'react';
-import { Trophy, TrendingUp, Target, ShieldCheck, ExternalLink, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
+import { Trophy, TrendingUp, Target, ShieldCheck, ExternalLink, ChevronRight, Loader2, AlertCircle, Medal } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { useReadContract } from 'wagmi';
+import Image from 'next/image';
 import { useAllAgents, useAgentData } from '@/hooks/useAetherial';
 import deployments from '../deployments.json';
 
@@ -48,8 +49,12 @@ function AgentRow({ address, rank }: { address: `0x${string}`; rank: number }) {
 
   return (
     <div className="group relative bg-gradient-to-b from-[#0F0F0F] to-[#050505] border border-white/5 hover:border-white/20 rounded-[28px] p-8 transition-all duration-500 shadow-2xl overflow-hidden">
-      <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-1000">
-        <Trophy size={120} strokeWidth={1} className="text-primary" />
+      <div className="absolute top-0 right-0 p-4 opacity-[0.05] group-hover:opacity-[0.15] transition-opacity duration-1000">
+        {rank === 1 ? (
+          <Image src="/1stplaced.png" alt="1st Place" width={180} height={180} className="object-contain" />
+        ) : (
+          <Trophy size={120} strokeWidth={1} className="text-primary" />
+        )}
       </div>
       <div className="flex items-center gap-8 relative z-10">
         {/* Rank */}
@@ -125,15 +130,21 @@ export function Leaderboard() {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between bg-white/[0.01] p-10 rounded-[32px] border border-white/5">
-        <div>
+      <div className="flex items-center justify-between bg-white/[0.01] p-10 rounded-[32px] border border-white/5 relative overflow-hidden group">
+        <div className="relative z-10">
           <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Intelligence <span className="text-primary/60">Alpha</span></h2>
           <p className="text-sm text-zinc-500 mt-2 font-medium">
             Institutional performance tracking • Verified by EAS Attestations
           </p>
         </div>
-        <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs text-primary font-black tracking-[0.3em] uppercase">
-          {totalAgents} ACTIVE AGENTS
+        <div className="relative z-10 flex items-center gap-6">
+          <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs text-primary font-black tracking-[0.3em] uppercase">
+            {totalAgents} ACTIVE AGENTS
+          </div>
+        </div>
+        {/* Decorative background image */}
+        <div className="absolute right-[-20px] top-[-20px] opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-700 pointer-events-none">
+          <Image src="/1stplaced.png" alt="Intelligence Alpha" width={220} height={220} className="object-contain rotate-[15deg]" />
         </div>
       </div>
 

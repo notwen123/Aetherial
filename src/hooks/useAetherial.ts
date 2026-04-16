@@ -1,5 +1,5 @@
 'use client';
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useSwitchChain, useChainId } from 'wagmi';
+import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useSwitchChain, useChainId, usePublicClient } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
 import { useState } from 'react';
 import deployments from '../deployments.json';
@@ -47,6 +47,8 @@ const ERC20_ABI = [
   { name: 'approve', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'spender', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [{ type: 'bool' }] },
   { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ type: 'uint256' }] },
   { name: 'allowance', type: 'function', stateMutability: 'view', inputs: [{ name: 'owner', type: 'address' }, { name: 'spender', type: 'address' }], outputs: [{ type: 'uint256' }] },
+  { name: 'faucet', type: 'function', stateMutability: 'nonpayable', inputs: [], outputs: [] },
+  { name: 'lastFaucetClaim', type: 'function', stateMutability: 'view', inputs: [{ name: '', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
 const isDeployed = !!(VAULT_ADDRESS && VAULT_ADDRESS.length > 4);
@@ -63,36 +65,68 @@ export function useAetherial() {
 
   const { data: lpShares, refetch: refetchShares } = useReadContract({
     address: VAULT_ADDRESS, abi: VAULT_ABI, functionName: 'lpShares',
-    args: [address!], query: { enabled },
+    args: [address!], chainId: 1952, query: { enabled },
   });
 
   const { data: lpAssetValue, refetch: refetchAssetValue } = useReadContract({
     address: VAULT_ADDRESS, abi: VAULT_ABI, functionName: 'lpAssetValue',
-    args: [address!], query: { enabled },
+    args: [address!], chainId: 1952, query: { enabled },
   });
 
   const { data: pendingYield, refetch: refetchYield } = useReadContract({
     address: VAULT_ADDRESS, abi: VAULT_ABI, functionName: 'pendingYieldOf',
-    args: [address!], query: { enabled },
+    args: [address!], chainId: 1952, query: { enabled },
   });
 
   const { data: ausdBalance, refetch: refetchAusd } = useReadContract({
     address: AUSD_ADDRESS, abi: ERC20_ABI, functionName: 'balanceOf',
-    args: [address!], query: { enabled },
+    args: [address!], chainId: 1952, query: { enabled },
   });
 
   const { data: ausdAllowance, refetch: refetchAllowance } = useReadContract({
     address: AUSD_ADDRESS, abi: ERC20_ABI, functionName: 'allowance',
-    args: [address!, VAULT_ADDRESS], query: { enabled },
+    args: [address!, VAULT_ADDRESS], chainId: 1952, query: { enabled },
   });
+
+  const publicClient = usePublicClient();
 
   const { isLoading: isTxPending } = useWaitForTransactionReceipt({
     hash: pendingTx,
   });
 
+  const { data: lastClaim, refetch: refetchClaim } = useReadContract({
+    address: AUSD_ADDRESS, abi: ERC20_ABI, functionName: 'lastFaucetClaim',
+    args: [address!],
+    chainId: 1952,
+    query: { enabled: !!address && isDeployed, refetchInterval: 30_000 },
+  });
+
   const refetchAll = () => {
     refetchShares(); refetchAssetValue(); refetchYield();
-    refetchAusd(); refetchAllowance();
+    refetchAusd(); refetchAllowance(); refetchClaim();
+  };
+
+  const lastClaimTime = lastClaim ? Number(lastClaim) : 0;
+  const now = Math.floor(Date.now() / 1000);
+  const cooldownPeriod = 24 * 60 * 60;
+  const canClaim = lastClaimTime === 0 || now >= lastClaimTime + cooldownPeriod;
+  const secondsUntilNextFaucet = Math.max(0, (lastClaimTime + cooldownPeriod) - now);
+
+  const faucet = async () => {
+    if (chainId !== 1952) await switchChainAsync({ chainId: 1952 });
+    
+    const tx = await writeContractAsync({
+      address: AUSD_ADDRESS, abi: ERC20_ABI,
+      functionName: 'faucet', args: [],
+    });
+    setPendingTx(tx);
+
+    // Wait for confirmation to ensure balance is updated before returning
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash: tx });
+    }
+
+    return tx;
   };
 
   // Approve then deposit
@@ -100,20 +134,34 @@ export function useAetherial() {
     const amount = parseEther(amountEther);
     
     // 1. Force chain switch to 195 if needed
-    if (chainId !== 195) {
-      await switchChainAsync({ chainId: 195 });
+    if (chainId !== 1952) {
+      await switchChainAsync({ chainId: 1952 });
     }
 
-    // 2. Approve if needed
-    if (!ausdAllowance || (ausdAllowance as bigint) < amount) {
-      const approveTx = await writeContractAsync({
-        address: AUSD_ADDRESS, abi: ERC20_ABI,
-        functionName: 'approve', args: [VAULT_ADDRESS, amount],
-      });
-      setPendingTx(approveTx);
+    // 2. Check balance
+    if (!ausdBalance || (ausdBalance as bigint) < amount) {
+      throw new Error(`Insufficient AUSD balance. You need ${amountEther} AUSD.`);
     }
+
+    // 3. Approve if needed (Infinite Approval for UX)
+    if (!ausdAllowance || (ausdAllowance as bigint) < amount) {
+      const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+      const approveTxHash = await writeContractAsync({
+        address: AUSD_ADDRESS, abi: ERC20_ABI, chainId: 1952,
+        functionName: 'approve', args: [VAULT_ADDRESS, MAX_UINT256],
+      });
+      setPendingTx(approveTxHash);
+      
+      // WAIT for approval to be mined before proceeding
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
+        await refetchAllowance();
+      }
+    }
+
+    // 4. Deposit
     const tx = await writeContractAsync({
-      address: VAULT_ADDRESS, abi: VAULT_ABI,
+      address: VAULT_ADDRESS, abi: VAULT_ABI, chainId: 1952,
       functionName: 'deposit', args: [amount],
     });
     setPendingTx(tx);
@@ -124,12 +172,17 @@ export function useAetherial() {
   const withdraw = async (shareAmountEther: string) => {
     const shares = parseEther(shareAmountEther);
 
-    if (chainId !== 195) {
-      await switchChainAsync({ chainId: 195 });
+    if (chainId !== 1952) {
+      await switchChainAsync({ chainId: 1952 });
+    }
+
+    // 2. Check shares balance
+    if (!lpShares || (lpShares as bigint) < shares) {
+      throw new Error(`Insufficient share balance. You have ${lpShares ? formatEther(lpShares) : '0'} shares.`);
     }
 
     const tx = await writeContractAsync({
-      address: VAULT_ADDRESS, abi: VAULT_ABI,
+      address: VAULT_ADDRESS, abi: VAULT_ABI, chainId: 1952,
       functionName: 'withdraw', args: [shares],
     });
     setPendingTx(tx);
@@ -137,12 +190,12 @@ export function useAetherial() {
   };
 
   const claimYield = async () => {
-    if (chainId !== 195) {
-      await switchChainAsync({ chainId: 195 });
+    if (chainId !== 1952) {
+      await switchChainAsync({ chainId: 1952 });
     }
 
     const tx = await writeContractAsync({
-      address: VAULT_ADDRESS, abi: VAULT_ABI,
+      address: VAULT_ADDRESS, abi: VAULT_ABI, chainId: 1952,
       functionName: 'claimYield', args: [],
     });
     setPendingTx(tx);
@@ -156,14 +209,16 @@ export function useAetherial() {
     pendingYield: pendingYield as bigint | undefined,
     ausdBalance: ausdBalance as bigint | undefined,
     // formatted helpers
-    lpAssetValueFormatted: lpAssetValue ? parseFloat(formatEther(lpAssetValue as bigint)).toFixed(4) : '0.0000',
-    pendingYieldFormatted: pendingYield ? parseFloat(formatEther(pendingYield as bigint)).toFixed(6) : '0.000000',
-    ausdBalanceFormatted: ausdBalance ? parseFloat(formatEther(ausdBalance as bigint)).toFixed(2) : '0.00',
+    lpAssetValueFormatted: lpAssetValue ? new Intl.NumberFormat('en-US', { notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 2 }).format(Number(formatEther(lpAssetValue as bigint))) : '0.00',
+    pendingYieldFormatted: pendingYield ? new Intl.NumberFormat('en-US', { minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(Number(formatEther(pendingYield as bigint))) : '0.000000',
+    ausdBalanceFormatted: ausdBalance ? new Intl.NumberFormat('en-US', { notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 2 }).format(Number(formatEther(ausdBalance as bigint))) : '0.00',
     // renamed labels for UI consistency
-    assetSymbol: 'OKB',
-    yieldSymbol: 'OKB',
+    assetSymbol: 'AUSD',
+    yieldSymbol: 'AUSD',
     // actions
-    deposit, withdraw, claimYield,
+    deposit, withdraw, claimYield, faucet,
+    canClaim,
+    secondsUntilNextFaucet,
     isTxPending,
     refetchAll,
     isDeployed,
@@ -174,21 +229,24 @@ export function useAetherial() {
 export function useVaultStats() {
   const { data: totalAssets } = useReadContract({
     address: VAULT_ADDRESS, abi: VAULT_ABI, functionName: 'totalAssets',
+    chainId: 1952,
     query: { enabled: isDeployed, refetchInterval: 15_000 },
   });
   const { data: totalAllocated } = useReadContract({
     address: VAULT_ADDRESS, abi: VAULT_ABI, functionName: 'totalAllocated',
+    chainId: 1952,
     query: { enabled: isDeployed, refetchInterval: 15_000 },
   });
   const { data: totalShares } = useReadContract({
     address: VAULT_ADDRESS, abi: VAULT_ABI, functionName: 'totalShares',
+    chainId: 1952,
     query: { enabled: isDeployed, refetchInterval: 15_000 },
   });
 
   const ta = totalAssets as bigint | undefined;
   const tl = totalAllocated as bigint | undefined;
-  const available = ta && tl ? ta - tl : undefined;
-  const utilization = ta && tl && ta > BigInt(0)
+  const available = (ta !== undefined && tl !== undefined) ? (ta - tl) : undefined;
+  const utilization = (ta !== undefined && tl !== undefined && ta > 0n)
     ? ((Number(tl) / Number(ta)) * 100).toFixed(1)
     : '0.0';
 
@@ -198,9 +256,9 @@ export function useVaultStats() {
     totalShares: totalShares as bigint | undefined,
     available,
     utilization,
-    totalAssetsFormatted: ta ? parseFloat(formatEther(ta)).toFixed(2) : '—',
-    totalAllocatedFormatted: tl ? parseFloat(formatEther(tl)).toFixed(2) : '—',
-    availableFormatted: available ? parseFloat(formatEther(available)).toFixed(2) : '—',
+    totalAssetsFormatted: ta !== undefined ? new Intl.NumberFormat('en-US', { notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 2 }).format(Number(formatEther(ta))) : '—',
+    totalAllocatedFormatted: tl !== undefined ? new Intl.NumberFormat('en-US', { notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 2 }).format(Number(formatEther(tl))) : '—',
+    availableFormatted: available !== undefined ? new Intl.NumberFormat('en-US', { notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 2 }).format(Number(formatEther(available))) : '—',
   };
 }
 
@@ -209,6 +267,7 @@ export function useAgentData(agentAddress?: `0x${string}`) {
   const { data: agentInfo } = useReadContract({
     address: REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'getAgent',
     args: [agentAddress!],
+    chainId: 1952,
     query: { enabled: isDeployed && !!agentAddress, refetchInterval: 30_000 },
   });
 

@@ -12,7 +12,7 @@ import {
   ShieldCheck, ArrowUpRight, Plus, Rocket
 } from 'lucide-react';
 import { useAccount, useConnect } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useConnectModal, ConnectButton } from '@rainbow-me/rainbowkit';
 import { useRouter } from 'next/navigation';
 import { motion, useScroll, useTransform, useSpring, AnimatePresence, useVelocity } from 'framer-motion';
 import { useVaultStats, useAllAgents } from '@/hooks/useAetherial';
@@ -137,32 +137,82 @@ export default function LandingPage() {
       <ScrollSkew>
         {/* Cinematic Nav */}
         <motion.nav 
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 1 }}
-          className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] w-full max-w-4xl px-4"
+          initial={{ y: -100, x: "-50%", opacity: 0 }}
+          animate={{ y: 0, x: "-50%", opacity: 1 }}
+          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 1 }}
+          className="fixed top-8 left-1/2 z-[100] w-full max-w-6xl px-8"
         >
-          <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full px-8 h-16 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <div className="flex items-center gap-3 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <div className="w-8 h-8 flex items-center justify-center group-hover:bg-primary/5 transition-all duration-500 overflow-hidden rounded-lg">
-                <Image src="/logo.png" alt="Aetherial Logo" width={24} height={24} className="object-contain" />
+          <div className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-full h-22 relative grid grid-cols-[1fr_auto_1fr] items-center px-10 shadow-[0_25px_60px_rgba(0,0,0,0.6)]">
+            {/* Left Column: Branding */}
+            <div className="flex items-center justify-start z-10">
+              <div className="flex items-center gap-3 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                <div className="w-10 h-10 flex items-center justify-center group-hover:bg-primary/5 transition-all duration-500 overflow-hidden rounded-[14px] bg-white/[0.03] border border-white/5">
+                  <Image src="/logo.png" alt="Aetherial Logo" width={28} height={28} className="object-contain" />
+                </div>
+                <span className="text-[11px] font-black tracking-[0.3em] uppercase py-1 text-white">Aetherial</span>
               </div>
-              <span className="text-sm font-black tracking-tighter uppercase py-1">Aetherial</span>
             </div>
 
-            <div className="hidden lg:flex items-center gap-8">
-              {['Protocol', 'Ecosystem', 'Governance', 'Docs'].map(item => (
-                <a key={item} href={`#${item.toLowerCase()}`} className="text-[10px] font-mono font-bold text-zinc-500 hover:text-primary transition-colors uppercase tracking-[0.4em]">{item}</a>
-              ))}
+            {/* Center Column: Navigation (Robust Centering with Gap Control) */}
+            <div className="flex items-center justify-center">
+              <nav className="flex items-center gap-10">
+                {['Protocol', 'Ecosystem', 'Governance', 'Docs'].map(item => (
+                  <a 
+                    key={item} 
+                    href={`#${item.toLowerCase()}`} 
+                    className="text-[10px] font-mono font-bold text-zinc-500 hover:text-primary transition-all uppercase tracking-[0.4em] hover:scale-105 active:opacity-50 whitespace-nowrap"
+                  >
+                    {item}
+                  </a>
+                ))}
+              </nav>
             </div>
 
-            <div className="flex items-center gap-4">
+            {/* Right Column: Actions */}
+            <div className="flex items-center justify-end gap-5 z-10">
+              <ConnectButton.Custom>
+                {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
+                  const ready = mounted;
+                  const connected = ready && account && chain;
+
+                  return (
+                    <div
+                      {...(!ready && {
+                        'aria-hidden': true,
+                        style: { opacity: 0, pointerEvents: 'none', userSelect: 'none' },
+                      })}
+                    >
+                      {(() => {
+                        if (!connected) return (
+                          <button onClick={openConnectModal} className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 hover:text-white transition-colors">
+                            Authenticate
+                          </button>
+                        );
+                        if (chain.unsupported) return (
+                          <button onClick={openChainModal} className="bg-rose-500/10 text-rose-400 px-4 py-2 rounded-full text-[9px] font-bold uppercase border border-rose-500/20">
+                            Layer Error
+                          </button>
+                        );
+                        return (
+                          <button onClick={openAccountModal} className="flex items-center gap-3 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all group">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            <span className="text-[10px] font-mono font-bold text-zinc-400">{account.displayName}</span>
+                          </button>
+                        );
+                      })()}
+                    </div>
+                  );
+                }}
+              </ConnectButton.Custom>
+
+              <div className="w-px h-4 bg-white/10" />
+
               <button
                 onClick={handleLaunch}
                 suppressHydrationWarning
-                className="bg-primary text-black px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-110 hover:scale-105 transition-all flex items-center gap-2 active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.2)]"
+                className="bg-primary text-black px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-110 hover:shadow-[0_0_30px_rgba(163,230,53,0.4)] transition-all flex items-center gap-2"
               >
-                {isConnected ? 'Terminal' : 'Initialize'} <TerminalIcon size={12} />
+                {isConnected ? 'Terminal_Access' : 'Initialize_Node'} <TerminalIcon size={13} />
               </button>
             </div>
           </div>

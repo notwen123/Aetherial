@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Terminal as TerminalIcon, Wallet, Activity, Shield, Server,
   ChevronRight, ArrowUpRight, TrendingUp, LayoutDashboard, Trophy,
-  PieChart as AnalyticsIcon, ShieldCheck, Vault as VaultIcon, Lock, Zap, Loader2,
+  PieChart as AnalyticsIcon, ShieldCheck, Vault as VaultIcon, Lock, Zap, Loader2, AlertCircle,
 } from 'lucide-react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { formatEther } from 'viem';
+import { useConnectModal, ConnectButton } from '@rainbow-me/rainbowkit';
+import { formatEther, parseEther } from 'viem';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -17,6 +17,7 @@ import { Leaderboard } from '@/components/Leaderboard';
 import { Vaults } from '@/components/Vaults';
 import { EASHub } from '@/components/EASHub';
 import { PortfolioAnalytics } from '@/components/PortfolioAnalytics';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type Tab = 'DASHBOARD' | 'VAULTS' | 'ANALYTICS' | 'LEADERBOARD' | 'TRANSPARENCY';
 
@@ -25,8 +26,12 @@ export default function AetherialTerminal() {
   const [activeTab, setActiveTab] = useState<Tab>('DASHBOARD');
   const [depositAmt, setDepositAmt] = useState('');
   const [withdrawAmt, setWithdrawAmt] = useState('');
-  const [logs, setLogs] = useState<{ msg: string; type: 'info' | 'success' | 'err' }[]>([]);
+
   const [isAuditing, setIsAuditing] = useState(false);
+  const [isTxModalOpen, setIsTxModalOpen] = useState(false);
+  const [txStatus, setTxStatus] = useState<'success' | 'err'>('success');
+  const [txError, setTxError] = useState<string | null>(null);
+  const [lastTxHash, setLastTxHash] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -37,16 +42,21 @@ export default function AetherialTerminal() {
   const { disconnect } = useDisconnect();
 
   const {
-    lpAssetValueFormatted, pendingYieldFormatted, ausdBalanceFormatted,
-    deposit, withdraw, claimYield, isTxPending, refetchAll, isDeployed,
-    assetSymbol, yieldSymbol,
+    lpShares,
+    lpAssetValue, lpAssetValueFormatted, 
+    pendingYield, pendingYieldFormatted, 
+    ausdBalance, ausdBalanceFormatted,
+    deposit, withdraw, claimYield, faucet, isTxPending, refetchAll, isDeployed,
+    assetSymbol, yieldSymbol, canClaim, secondsUntilNextFaucet,
   } = useAetherial();
 
-  const { totalAssetsFormatted, utilization } = useVaultStats();
+  const { totalAssets, totalAssetsFormatted, utilization } = useVaultStats();
   const { creditScore, isWhitelisted } = useAgentData(address);
 
-  const addLog = (msg: string, type: 'info' | 'success' | 'err' = 'info') =>
-    setLogs(prev => [{ msg, type }, ...prev].slice(0, 12));
+  const [logs, setLogs] = useState<{ msg: string; type: 'info' | 'success' | 'err'; tx?: string }[]>([]);
+
+  const addLog = (msg: string, type: 'info' | 'success' | 'err' = 'info', tx?: string) =>
+    setLogs(prev => [{ msg, type, tx }, ...prev].slice(0, 12));
 
   useEffect(() => {
     if (isConnected) {
@@ -56,22 +66,42 @@ export default function AetherialTerminal() {
     }
   }, [isConnected, isDeployed]);
 
-  const [lastTxHash, setLastTxHash] = useState<string | null>(null);
-  const [showTxPopup, setShowTxPopup] = useState(false);
+  const handleFaucet = async () => {
+    addLog('Requesting 100 testnet AUSD...', 'info');
+    try {
+      const tx = await faucet();
+      setLastTxHash(tx);
+      setTxStatus('success');
+      setIsTxModalOpen(true);
+      addLog('AUSD claim confirmed. Balance updated.', 'success', tx);
+      refetchAll();
+    } catch (e: any) {
+      const msg = e.shortMessage ?? e.message ?? 'Rejected';
+      addLog(`Faucet Failed: ${msg}`, 'err');
+      setTxError(msg);
+      setTxStatus('err');
+      setIsTxModalOpen(true);
+    }
+  };
 
   const handleDeposit = async () => {
     if (!depositAmt) return;
-    addLog(`Approving & depositing ${depositAmt} ${assetSymbol}...`, 'info');
+    addLog(`Initiating Supply Cycle for ${depositAmt} ${assetSymbol}...`, 'info');
     try {
+      addLog('Step 1/2: Verifying Allowance...', 'info');
       const tx = await deposit(depositAmt);
       setLastTxHash(tx);
-      setShowTxPopup(true);
-      addLog(`Deposit confirmed. Tx: ${tx.slice(0, 14)}...`, 'success');
+      setTxStatus('success');
+      setIsTxModalOpen(true);
+      addLog(`Step 2/2: Deposit confirmed. Asset locked in vault.`, 'success', tx);
       setDepositAmt('');
       setTimeout(refetchAll, 3000);
-      setTimeout(() => setShowTxPopup(false), 8000);
     } catch (e: any) {
-      addLog(`Failed: ${e.shortMessage ?? e.message ?? 'Rejected'}`, 'err');
+      const msg = e.shortMessage ?? e.message ?? 'Rejected';
+      addLog(`Operation Failed: ${msg}`, 'err');
+      setTxError(msg);
+      setTxStatus('err');
+      setIsTxModalOpen(true);
     }
   };
 
@@ -81,13 +111,17 @@ export default function AetherialTerminal() {
     try {
       const tx = await withdraw(withdrawAmt);
       setLastTxHash(tx);
-      setShowTxPopup(true);
-      addLog(`Withdrawal confirmed. Tx: ${tx.slice(0, 14)}...`, 'success');
+      setTxStatus('success');
+      setIsTxModalOpen(true);
+      addLog(`Step 2/2: Withdrawal confirmed. Shares redeemed.`, 'success', tx);
       setWithdrawAmt('');
       setTimeout(refetchAll, 3000);
-      setTimeout(() => setShowTxPopup(false), 8000);
     } catch (e: any) {
-      addLog(`Failed: ${e.shortMessage ?? e.message ?? 'Rejected'}`, 'err');
+      const msg = e.shortMessage ?? e.message ?? 'Rejected';
+      addLog(`Failed: ${msg}`, 'err');
+      setTxError(msg);
+      setTxStatus('err');
+      setIsTxModalOpen(true);
     }
   };
 
@@ -96,12 +130,16 @@ export default function AetherialTerminal() {
     try {
       const tx = await claimYield();
       setLastTxHash(tx);
-      setShowTxPopup(true);
-      addLog(`Yield claimed. Tx: ${tx.slice(0, 14)}...`, 'success');
+      setTxStatus('success');
+      setIsTxModalOpen(true);
+      addLog(`Yield claimed and re-invested.`, 'success', tx);
       setTimeout(refetchAll, 3000);
-      setTimeout(() => setShowTxPopup(false), 8000);
     } catch (e: any) {
-      addLog(`Failed: ${e.shortMessage ?? e.message ?? 'Rejected'}`, 'err');
+      const msg = e.shortMessage ?? e.message ?? 'Rejected';
+      addLog(`Failed: ${msg}`, 'err');
+      setTxError(msg);
+      setTxStatus('err');
+      setIsTxModalOpen(true);
     }
   };
 
@@ -169,71 +207,84 @@ export default function AetherialTerminal() {
 
   return (
     <div className="min-h-screen bg-[#000000] text-zinc-400 font-sans selection:bg-primary/30 selection:text-primary">
-      {/* Transaction HUD Popup */}
-      {showTxPopup && (
-        <div className="fixed bottom-10 right-10 z-[100] animate-in fade-in slide-in-from-right-10 duration-500">
-          <div className="bg-[#0F0F0F] border border-primary/20 p-8 rounded-[32px] shadow-2xl backdrop-blur-3xl min-w-[320px] relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-1 bg-primary/20 overflow-hidden">
-              <div className="h-full bg-primary animate-[progress_8s_linear]" />
-            </div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
-                  <Zap size={20} className="text-primary" />
-                </div>
-                <div>
-                  <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Transaction Anchored</h4>
-                  <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">X Layer Testnet Confirmation</p>
-                </div>
-              </div>
-              <button onClick={() => setShowTxPopup(false)} className="text-zinc-700 hover:text-white transition-colors">
-                <Lock size={14} />
-              </button>
-            </div>
-            <a 
-              href={`https://www.oklink.com/xlayer-test/tx/${lastTxHash}`}
-              target="_blank" rel="noreferrer"
-              className="flex items-center justify-center gap-3 w-full py-4 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-xl text-[10px] font-black text-primary uppercase tracking-[0.3em] transition-all group-hover:scale-[1.02]">
-              View on OKLink <ArrowUpRight size={14} />
-            </a>
-          </div>
-        </div>
-      )}
       {/* Navbar */}
-      <nav className="h-16 border-b border-white/5 bg-black/80 backdrop-blur-2xl flex items-center justify-between px-10 sticky top-0 z-50">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 flex items-center justify-center group-hover:bg-primary/5 transition-all duration-500 overflow-hidden rounded-lg">
+      <nav className="h-20 border-b border-white/5 bg-black/80 backdrop-blur-2xl px-10 sticky top-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center">
+        {/* Left Column: Branding & Terminal Logic */}
+        <div className="flex items-center justify-start gap-4">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-all">
+            <div className="w-10 h-10 flex items-center justify-center bg-primary/5 border border-primary/20 rounded-xl overflow-hidden">
               <Image src="/logo.png" alt="Aetherial Logo" width={24} height={24} className="object-contain" />
             </div>
-            <span className="text-lg font-black text-white tracking-tighter">
-              AETHERIAL <span className="text-primary ml-0.5 uppercase tracking-widest">PRIME</span>
-            </span>
+            <div className="flex flex-col">
+              <span className="text-[12px] font-black tracking-[0.2em] text-white">AETHERIAL</span>
+              <span className="text-[9px] font-mono font-bold text-primary tracking-[0.1em]">TERMINAL_CORE</span>
+            </div>
           </Link>
-          <div className="h-4 w-px bg-white/5 mx-2" />
-          <div className="flex items-center gap-8">
+          <div className="h-6 w-px bg-white/10 mx-2" />
+        </div>
+
+        {/* Center Column: Control Switches (Guaranteed Centering) */}
+        <div className="flex items-center justify-center">
+          <div className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/5">
             {navItems.map(item => (
-              <button key={item.id} onClick={() => setActiveTab(item.id as Tab)}
-                className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] transition-all hover:text-white ${
-                  activeTab === item.id ? 'text-white' : 'text-zinc-500'
-                }`}>
-                <item.icon size={14} className={activeTab === item.id ? 'text-primary' : ''} /> {item.label}
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as Tab)}
+                className={`flex items-center gap-2.5 px-6 py-2.5 rounded-lg text-[10px] uppercase tracking-[0.2em] font-black transition-all ${
+                  activeTab === item.id 
+                    ? 'bg-primary text-black shadow-lg shadow-primary/20 scale-105' 
+                    : 'text-zinc-500 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <item.icon size={13} strokeWidth={3} />
+                <span className="hidden lg:inline">{item.label}</span>
               </button>
             ))}
           </div>
         </div>
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-full">
+          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/[0.03] border border-white/5 rounded-full">
             <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_12px_rgba(163,230,53,0.6)] animate-pulse" />
-            <span className="text-[10px] uppercase font-bold text-zinc-300 tracking-[0.2em]">X-Layer Active</span>
+            <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-[0.2em]">X-Layer Testnet Cluster Active</span>
           </div>
-          <div className="flex items-center gap-3 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-primary">
-            <Wallet size={14} />
-            <span className="text-[11px] font-mono font-bold tracking-tight">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
-          </div>
-          <button onClick={() => disconnect()} className="p-2 text-zinc-600 hover:text-rose-500 transition-colors" title="Disconnect">
-            <Lock size={16} />
-          </button>
+          
+          <ConnectButton.Custom>
+            {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
+              const ready = mounted;
+              const connected = ready && account && chain;
+
+              return (
+                <div
+                  {...(!ready && {
+                    'aria-hidden': true,
+                    style: { opacity: 0, pointerEvents: 'none', userSelect: 'none' },
+                  })}
+                >
+                  {(() => {
+                    if (!connected) return (
+                      <button onClick={openConnectModal} className="px-5 py-2 bg-primary text-black rounded-full text-[10px] font-black uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all">
+                        Initialize Core
+                      </button>
+                    );
+                    if (chain.unsupported) return (
+                      <button onClick={openChainModal} className="px-4 py-2 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-full text-[10px] font-bold uppercase">
+                        Protocol Error: Wrong Network
+                      </button>
+                    );
+                    return (
+                      <button
+                        onClick={openAccountModal}
+                        className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all group"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-primary group-hover:animate-ping" />
+                        <span className="text-[11px] font-mono font-bold text-zinc-300 tracking-tight">{account.displayName}</span>
+                      </button>
+                    );
+                  })()}
+                </div>
+              );
+            }}
+          </ConnectButton.Custom>
         </div>
       </nav>
 
@@ -250,15 +301,21 @@ export default function AetherialTerminal() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div className="bg-gradient-to-b from-[#0F0F0F] to-[#050505] border border-white/5 p-10 rounded-[32px] hover:border-white/10 transition-all group">
                     <div className="flex items-center gap-2 text-zinc-500 mb-6">
-                      <Activity size={14} className="group-hover:text-primary transition-colors" />
+                      <Zap size={14} className="group-hover:text-primary transition-colors" />
                       <span className="text-[10px] uppercase font-bold tracking-[0.4em]">Deposited Value</span>
                     </div>
                     <div className="text-5xl font-bold text-white tracking-tighter">
-                      {lpAssetValueFormatted}
-                      <span className="text-sm font-bold text-zinc-600 ml-3">{assetSymbol}</span>
+                      {lpAssetValue === undefined ? (
+                        <div className="h-12 w-32 bg-white/5 animate-pulse rounded-lg" />
+                      ) : (
+                        <>
+                          {lpAssetValueFormatted}
+                          <span className="text-sm font-bold text-zinc-600 ml-3">{assetSymbol}</span>
+                        </>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 mt-8 text-primary/80 text-[10px] font-bold uppercase tracking-[0.2em]">
-                      <TrendingUp size={12} /> {pendingYieldFormatted} {yieldSymbol} Accrued
+                      <TrendingUp size={12} /> {pendingYield === undefined ? '—' : pendingYieldFormatted} {yieldSymbol} Accrued
                     </div>
                   </div>
 
@@ -281,8 +338,14 @@ export default function AetherialTerminal() {
                       <span className="text-[10px] uppercase font-bold tracking-[0.4em]">Vault TVL</span>
                     </div>
                     <div className="relative z-10 text-5xl font-bold text-white tracking-tighter">
-                      {totalAssetsFormatted}
-                      <span className="text-xs font-bold text-primary/40 uppercase block sm:inline sm:ml-2">AUSD</span>
+                      {totalAssets === undefined ? (
+                        <div className="h-12 w-32 bg-white/5 animate-pulse rounded-lg" />
+                      ) : (
+                        <>
+                          {totalAssetsFormatted}
+                          <span className="text-xs font-bold text-primary/40 uppercase block sm:inline sm:ml-2">AUSD</span>
+                        </>
+                      )}
                     </div>
                     <p className="relative z-10 text-[10px] text-zinc-500 mt-8 font-bold uppercase tracking-[0.2em]">
                       {utilization}% Utilization Rate
@@ -299,13 +362,96 @@ export default function AetherialTerminal() {
                     <h3 className="text-[10px] font-bold uppercase text-zinc-400 tracking-[0.4em] flex items-center gap-3">
                       <Wallet size={14} className="text-primary" /> Liquidity Handshake
                     </h3>
-                    <div className="flex items-center gap-2 bg-black px-4 py-2 rounded-full border border-white/5">
-                      <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Wallet</span>
-                      <span className="text-[11px] text-white font-mono font-bold">{ausdBalanceFormatted} {assetSymbol}</span>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={handleFaucet} 
+                        disabled={isTxPending || !canClaim}
+                        className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-50 
+                          ${!canClaim ? 'bg-zinc-800 text-zinc-500 border border-white/5 cursor-not-allowed' : 'bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-black'}`}
+                      >
+                        {!canClaim 
+                          ? `Next Claim In ${Math.ceil(secondsUntilNextFaucet / 3600)}H` 
+                          : 'Get 100 AUSD'}
+                      </button>
+                      <div className="flex items-center gap-2 bg-black px-4 py-2 rounded-full border border-white/5">
+                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Wallet</span>
+                        <span className="text-[11px] text-white font-mono font-bold">
+                          {ausdBalance === undefined ? '...' : ausdBalanceFormatted} {assetSymbol}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   <div className="p-10 space-y-10">
+                    {/* Transaction Status Modal */}
+                    <AnimatePresence>
+                      {isTxModalOpen && (
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl"
+                        >
+                          <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="max-w-md w-full bg-[#0A0A0A] border border-white/10 p-12 rounded-[40px] text-center relative overflow-hidden shadow-2xl"
+                          >
+                            {/* Decorative background flair */}
+                            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 blur-[100px] -z-10 ${
+                              txStatus === 'success' ? 'bg-primary/10' : 'bg-rose-500/10'
+                            }`} />
+
+                            <div className="mb-8 relative inline-flex">
+                              <div className={`absolute inset-0 blur-2xl rounded-full scale-150 animate-pulse ${
+                                txStatus === 'success' ? 'bg-primary/20' : 'bg-rose-500/20'
+                              }`} />
+                              <div className={`w-20 h-20 rounded-full flex items-center justify-center relative shadow-2xl ${
+                                txStatus === 'success' 
+                                  ? 'bg-primary shadow-primary/20' 
+                                  : 'bg-rose-500 shadow-rose-500/20'
+                              }`}>
+                                {txStatus === 'success' ? (
+                                  <ShieldCheck size={40} className="text-black" />
+                                ) : (
+                                  <AlertCircle size={40} className="text-white" />
+                                )}
+                              </div>
+                            </div>
+
+                            <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">
+                              {txStatus === 'success' ? 'Transmission Confirmed' : 'Transmission Failed'}
+                            </h3>
+                            <p className="text-zinc-500 mb-10 text-sm leading-relaxed max-w-[280px] mx-auto font-medium">
+                              {txStatus === 'success' 
+                                ? 'The delta rebalancing operation has been successfully committed to the X-Layer consensus layer.' 
+                                : txError || 'Operational failure detected during consensus verification. Please retry.'}
+                            </p>
+
+                            <div className="space-y-3">
+                              {lastTxHash && (
+                                <a 
+                                  href={`https://www.oklink.com/x-layer-testnet/tx/${lastTxHash}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-center gap-3 w-full bg-white text-black py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:brightness-90 transition-all group"
+                                >
+                                  View on Explorer <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                </a>
+                              )}
+                              <button 
+                                onClick={() => setIsTxModalOpen(false)}
+                                className="w-full py-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] hover:text-white transition-colors"
+                              >
+                                {txStatus === 'success' ? 'Dismiss Terminal' : 'Return to Core'}
+                              </button>
+                            </div>
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     {/* Deposit */}
                     <div className="space-y-4">
                       <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-[0.4em] ml-2">Supply {assetSymbol}</label>
@@ -322,7 +468,20 @@ export default function AetherialTerminal() {
 
                     {/* Withdraw */}
                     <div className="space-y-4">
-                      <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-[0.4em] ml-2">Withdraw Shares</label>
+                      <div className="flex items-center justify-between ml-2">
+                        <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-[0.4em]">Withdraw Shares</label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">
+                            Owned: {lpShares === undefined ? '...' : formatEther(lpShares)}
+                          </span>
+                          <button 
+                            onClick={() => setWithdrawAmt(lpShares ? formatEther(lpShares) : '')}
+                            className="text-[9px] text-primary font-black uppercase tracking-widest hover:text-white transition-colors"
+                          >
+                            [MAX]
+                          </button>
+                        </div>
+                      </div>
                       <div className="relative group/input">
                         <input
                           type="number" value={withdrawAmt}
@@ -340,8 +499,15 @@ export default function AetherialTerminal() {
                         {isTxPending ? <Loader2 size={16} className="animate-spin" /> : <ArrowUpRight size={16} strokeWidth={3} />}
                         Supply Capital
                       </button>
-                      <button onClick={handleWithdraw} disabled={isTxPending || !withdrawAmt}
-                        className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/5 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed col-span-1">
+                      <button 
+                        onClick={handleWithdraw} 
+                        disabled={
+                          isTxPending || 
+                          !withdrawAmt || 
+                          (lpShares !== undefined && parseEther(withdrawAmt || '0') > lpShares)
+                        }
+                        className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/5 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed col-span-1"
+                      >
                         {isTxPending ? <Loader2 size={16} className="animate-spin" /> : null}
                         Withdraw
                       </button>
@@ -389,7 +555,19 @@ export default function AetherialTerminal() {
                         <span className="text-[9px] opacity-25 font-black flex-shrink-0 tracking-widest">
                           [{new Date().toLocaleTimeString([], { hour12: false })}]
                         </span>
-                        <p className="flex-1 font-bold leading-[1.8] tracking-tight">{log.msg}</p>
+                        <p className="flex-1 font-bold leading-[1.8] tracking-tight flex items-center gap-2">
+                          {log.msg}
+                          {log.tx && (
+                            <a 
+                              href={`https://www.oklink.com/x-layer-testnet/tx/${log.tx}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="ml-2 px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-md text-[8px] text-primary hover:bg-primary hover:text-black transition-all font-black uppercase tracking-widest"
+                            >
+                              VIEW TX
+                            </a>
+                          )}
+                        </p>
                       </div>
                     ))}
                     {logs.length === 0 && (
