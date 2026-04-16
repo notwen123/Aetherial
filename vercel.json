@@ -5,7 +5,7 @@
   "crons": [
     {
       "path": "/api/agents/cycle",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 0 * * *"
     }
   ],
   "headers": [
