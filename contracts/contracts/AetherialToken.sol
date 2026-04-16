@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -21,8 +21,20 @@ contract AetherialToken is ERC20, Ownable {
         _decimals = decimals_;
     }
 
+    mapping(address => uint256) public lastFaucetClaim;
+
     function decimals() public view override returns (uint8) {
         return _decimals;
+    }
+
+    /// @notice Public testnet faucet — 100 AUSD every 24 hours
+    function faucet() external {
+        require(
+            block.timestamp >= lastFaucetClaim[msg.sender] + 1 days,
+            "Faucet: Wait 24 hours between claims"
+        );
+        lastFaucetClaim[msg.sender] = block.timestamp;
+        _mint(msg.sender, 100 * 10**uint256(_decimals));
     }
 
     /// @notice Testnet faucet — owner mints to bootstrap liquidity

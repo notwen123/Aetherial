@@ -30,6 +30,8 @@ export interface AetherialTokenInterface extends Interface {
       | "approve"
       | "balanceOf"
       | "decimals"
+      | "faucet"
+      | "lastFaucetClaim"
       | "mint"
       | "name"
       | "owner"
@@ -58,6 +60,11 @@ export interface AetherialTokenInterface extends Interface {
     values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
+  encodeFunctionData(functionFragment: "faucet", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "lastFaucetClaim",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "mint",
     values: [AddressLike, BigNumberish]
@@ -90,6 +97,11 @@ export interface AetherialTokenInterface extends Interface {
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "faucet", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "lastFaucetClaim",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -221,6 +233,10 @@ export interface AetherialToken extends BaseContract {
 
   decimals: TypedContractMethod<[], [bigint], "view">;
 
+  faucet: TypedContractMethod<[], [void], "nonpayable">;
+
+  lastFaucetClaim: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+
   mint: TypedContractMethod<
     [to: AddressLike, amount: BigNumberish],
     [void],
@@ -279,6 +295,12 @@ export interface AetherialToken extends BaseContract {
   getFunction(
     nameOrSignature: "decimals"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "faucet"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "lastFaucetClaim"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "mint"
   ): TypedContractMethod<

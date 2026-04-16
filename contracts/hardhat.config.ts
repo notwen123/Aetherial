@@ -7,21 +7,36 @@ dotenv.config({ path: '../.env.local', override: false }); // fallback
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.28",
-    settings: {
-      evmVersion: "cancun",
-      optimizer: {
-        enabled: true,
-        runs: 200,
+    compilers: [
+      {
+        version: "0.8.28",
+        settings: {
+          evmVersion: "cancun",
+          optimizer: { enabled: true, runs: 200 }
+        }
       },
-    },
+      {
+        version: "0.8.24",
+        settings: {
+          evmVersion: "cancun",
+          optimizer: { enabled: true, runs: 200 }
+        }
+      },
+      {
+        version: "0.8.20",
+        settings: {
+          evmVersion: "shanghai",
+          optimizer: { enabled: true, runs: 200 }
+        }
+      }
+    ]
   },
   networks: {
     // X Layer Testnet (chainId 1952)
     xlayer_testnet: {
       url: process.env.XLAYER_TESTNET_RPC ?? "https://xlayertestrpc.okx.com",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 195,
+      chainId: 1952,
       gasPrice: "auto",
     },
   },

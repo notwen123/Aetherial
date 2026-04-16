@@ -1,17 +1,17 @@
 {
   "network": "xlayer_testnet",
   "chainId": 1952,
-  "deployedAt": "2026-04-15T19:56:22.077Z",
+  "deployedAt": "2026-04-16T12:56:28.475Z",
   "deployer": "0x496398e5DdE2f0A02bA4bCc2b555a4bFf10F9D05",
   "eas": {
-    "address": "0x6C97cF4bFC9CE563976D9D4Efe42cFD57c71a49F",
-    "schemaRegistry": "0xF9eE59CEeA8F246c5F95EBAd22F9438467089D0b",
+    "address": "0x0c1cBa0200B140C0D954d03253B13b73dEF27077",
+    "schemaRegistry": "0x2dfEB194e5E5E62b9375dAB69e8393490D83BA58",
     "schemaUID": "0x2b95cc9a77d48d173541e58c3d5d31af38edbe58eb70f1503a22458faea7ef63"
   },
   "aetherial": {
-    "reputationNFT": "0x086aFB8EB6886091897a732Bf1c13a0cA68c2519",
-    "registry": "0xc03b3813690B1dcea9A345E968ba6db3cb0f0C7E",
-    "vault": "0x919B535dCB38f506b474DC541A26D6b3e8C0a383",
-    "ausd": "0x0421CE4FEB51D25763316117b756234861f5e59E"
+    "reputationNFT": "0x46835FD4EBEc147F191DA96d81e78731bc24e64f",
+    "registry": "0xe7e42DD3DB2ead7F034B48e77Ef6dE63F85e9eC7",
+    "vault": "0x6D8F81Fbc517b340D98a309cd2b3aC1C0e41ff4d",
+    "ausd": "0x88add2D3e6555aC990A5E6e30b4e474580252F8e"
   }
 }
