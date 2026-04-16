@@ -18,21 +18,22 @@
     "agents:dev": "ts-node --project tsconfig.agent.json -r tsconfig-paths/register src/agents/index.ts"
   },
   "dependencies": {
+    "@rainbow-me/rainbowkit": "^2.2.10",
     "@studio-freight/lenis": "^1.0.42",
-    "@tanstack/react-query": "^5.0.0",
+    "@tanstack/react-query": "^5.99.0",
     "axios": "^1.7.0",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
     "framer-motion": "^12.0.0",
     "lenis": "^1.1.0",
     "lucide-react": "latest",
-    "next": "14.2.0",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
+    "next": "^16.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "recharts": "^2.12.0",
     "tailwind-merge": "^2.5.0",
-    "viem": "^2.17.0",
-    "wagmi": "^2.10.0"
+    "viem": "^2.48.0",
+    "wagmi": "^2.19.5"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

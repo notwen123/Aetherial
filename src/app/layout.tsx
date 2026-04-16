@@ -22,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${inter.className} bg-[#000000] text-white antialiased`}>
+      <body suppressHydrationWarning className={`${inter.className} bg-[#000000] text-white antialiased`}>
         <Providers>
           <SmoothScroll>
             {children}

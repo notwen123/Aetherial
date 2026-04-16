@@ -1,17 +1,17 @@
 {
   "network": "xlayer_testnet",
-  "chainId": 1952,
-  "deployedAt": "2026-04-14T01:57:50.139Z",
-  "deployer": "0x8743127A434f78F873CEA9c7669bC6a71741C8d7",
+  "chainId": 195,
+  "deployedAt": "2026-04-15T19:56:22.077Z",
+  "deployer": "0x496398e5DdE2f0A02bA4bCc2b555a4bFf10F9D05",
   "eas": {
-    "address": "0x1790289eC87dd307ad60DC2334267Aa364805F0D",
-    "schemaRegistry": "0x249003f93eF6AdA38286930D64b4e83b828BE0fD",
+    "address": "0x6C97cF4bFC9CE563976D9D4Efe42cFD57c71a49F",
+    "schemaRegistry": "0xF9eE59CEeA8F246c5F95EBAd22F9438467089D0b",
     "schemaUID": "0x2b95cc9a77d48d173541e58c3d5d31af38edbe58eb70f1503a22458faea7ef63"
   },
   "aetherial": {
-    "reputationNFT": "0x867A6EC2FD3EBd8613D5cAE366eDb6b5199a76b8",
-    "registry": "0x0764071210BfD3283D07d24C3bac6623F61eAC07",
-    "vault": "0x8A596D58Fe2FBAF7a8Fa7e34263512cBC5eBd3F1",
-    "ausd": "0xff7CceaEE80c63C11cd50Bf73260D3FA7B5Ab595"
+    "reputationNFT": "0x086aFB8EB6886091897a732Bf1c13a0cA68c2519",
+    "registry": "0xc03b3813690B1dcea9A345E968ba6db3cb0f0C7E",
+    "vault": "0x919B535dCB38f506b474DC541A26D6b3e8C0a383",
+    "ausd": "0x0421CE4FEB51D25763316117b756234861f5e59E"
   }
 }

@@ -7,7 +7,7 @@ import {
   PieChart as AnalyticsIcon, ShieldCheck, Vault as VaultIcon, Lock, Zap, Loader2,
 } from 'lucide-react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { formatEther } from 'viem';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -21,14 +21,19 @@ import { PortfolioAnalytics } from '@/components/PortfolioAnalytics';
 type Tab = 'DASHBOARD' | 'VAULTS' | 'ANALYTICS' | 'LEADERBOARD' | 'TRANSPARENCY';
 
 export default function AetherialTerminal() {
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('DASHBOARD');
   const [depositAmt, setDepositAmt] = useState('');
   const [withdrawAmt, setWithdrawAmt] = useState('');
   const [logs, setLogs] = useState<{ msg: string; type: 'info' | 'success' | 'err' }[]>([]);
   const [isAuditing, setIsAuditing] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
+  const { openConnectModal } = useConnectModal();
   const { disconnect } = useDisconnect();
 
   const {
@@ -133,6 +138,8 @@ export default function AetherialTerminal() {
     { id: 'TRANSPARENCY', icon: ShieldCheck, label: 'Audits' },
   ];
 
+  if (!mounted) return null;
+
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-8 selection:bg-primary/30">
@@ -147,7 +154,7 @@ export default function AetherialTerminal() {
             </p>
           </div>
           <button
-            onClick={() => connect({ connector: injected() })}
+            onClick={() => openConnectModal?.()}
             className="w-full bg-primary hover:bg-primary/90 text-black py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary/20"
           >
             <Wallet size={18} /> Authorize Connection

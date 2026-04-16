@@ -12,7 +12,7 @@ import {
   ShieldCheck, ArrowUpRight, Plus, Rocket
 } from 'lucide-react';
 import { useAccount, useConnect } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useRouter } from 'next/navigation';
 import { motion, useScroll, useTransform, useSpring, AnimatePresence, useVelocity } from 'framer-motion';
 import { useVaultStats, useAllAgents } from '@/hooks/useAetherial';
@@ -114,11 +114,13 @@ export default function LandingPage() {
     });
   };
 
+  const { openConnectModal } = useConnectModal();
+
   const handleLaunch = () => {
     if (!isConnected) {
-      connect({ connector: injected() });
+      openConnectModal?.();
     } else {
-      router.push('/dashboard');
+      router.push('/terminal');
     }
   };
 
@@ -157,6 +159,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={handleLaunch}
+                suppressHydrationWarning
                 className="bg-primary text-black px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-110 hover:scale-105 transition-all flex items-center gap-2 active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.2)]"
               >
                 {isConnected ? 'Terminal' : 'Initialize'} <TerminalIcon size={12} />
@@ -257,7 +260,7 @@ export default function LandingPage() {
                 </h2>
               </div>
               <Link 
-                href="/dashboard" 
+                href="/terminal" 
                 className="group flex items-center gap-4 text-xs font-black uppercase tracking-[0.3em] border-b border-white/10 pb-2 hover:border-primary transition-colors"
               >
                 Audit the Engine <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -271,7 +274,7 @@ export default function LandingPage() {
                 className="md:col-span-4 bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 relative overflow-hidden flex flex-col justify-center group cursor-default min-h-[350px]"
               >
                  <div className="absolute inset-0 opacity-10 group-hover:scale-110 transition-transform duration-1000">
-                   <Image src="/5.png" alt="UI" fill className="object-cover" />
+                   <Image src="/5.png" alt="UI" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                  </div>
                  <div className="relative z-10 space-y-4">
                     <Zap className="text-primary" size={24} />
@@ -347,7 +350,8 @@ export default function LandingPage() {
             <Image 
               src="/orbital.png" 
               alt="Orbital Data Center" 
-              fill 
+              fill
+              sizes="100vw"
               className="object-cover brightness-50 contrast-125"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />

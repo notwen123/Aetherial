@@ -8,6 +8,9 @@ const nextConfig = {
       },
     ];
   },
+  experimental: {
+    // Next 16 compatibility
+  },
 };
 
 module.exports = nextConfig;

@@ -1,5 +1,5 @@
 'use client';
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi';
+import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useSwitchChain, useChainId } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
 import { useState } from 'react';
 import deployments from '../deployments.json';
@@ -55,6 +55,8 @@ const isDeployed = !!(VAULT_ADDRESS && VAULT_ADDRESS.length > 4);
 export function useAetherial() {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { switchChainAsync } = useSwitchChain();
+  const chainId = useChainId();
   const [pendingTx, setPendingTx] = useState<`0x${string}` | undefined>();
 
   const enabled = isDeployed && !!address;
@@ -96,7 +98,13 @@ export function useAetherial() {
   // Approve then deposit
   const deposit = async (amountEther: string) => {
     const amount = parseEther(amountEther);
-    // Approve if needed
+    
+    // 1. Force chain switch to 195 if needed
+    if (chainId !== 195) {
+      await switchChainAsync({ chainId: 195 });
+    }
+
+    // 2. Approve if needed
     if (!ausdAllowance || (ausdAllowance as bigint) < amount) {
       const approveTx = await writeContractAsync({
         address: AUSD_ADDRESS, abi: ERC20_ABI,
@@ -112,9 +120,14 @@ export function useAetherial() {
     return tx;
   };
 
-  // Withdraw by share amount (pass shares, not asset amount)
+  // Withdraw by share amount
   const withdraw = async (shareAmountEther: string) => {
     const shares = parseEther(shareAmountEther);
+
+    if (chainId !== 195) {
+      await switchChainAsync({ chainId: 195 });
+    }
+
     const tx = await writeContractAsync({
       address: VAULT_ADDRESS, abi: VAULT_ABI,
       functionName: 'withdraw', args: [shares],
@@ -124,6 +137,10 @@ export function useAetherial() {
   };
 
   const claimYield = async () => {
+    if (chainId !== 195) {
+      await switchChainAsync({ chainId: 195 });
+    }
+
     const tx = await writeContractAsync({
       address: VAULT_ADDRESS, abi: VAULT_ABI,
       functionName: 'claimYield', args: [],
