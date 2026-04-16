@@ -6,16 +6,18 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  return proxyToOKX(req, params.path, 'GET');
+  const { path } = await params;
+  return proxyToOKX(req, path, 'GET');
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  return proxyToOKX(req, params.path, 'POST');
+  const { path } = await params;
+  return proxyToOKX(req, path, 'POST');
 }
 
 async function proxyToOKX(req: NextRequest, pathSegments: string[], method: string) {
